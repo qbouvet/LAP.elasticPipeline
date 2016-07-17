@@ -1,0 +1,156 @@
+D:/00.LAP/00.ElasticPipeline/vhdl/ElasticBuffer_reg.vhd {1 {vcom -work work -2002 -explicit -stats=none {D:\00.LAP\00.ElasticPipeline\vhdl\ElasticBuffer_reg.vhd}
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity ElasticBuffer_reg
+-- Compiling architecture EB_seq_reg of ElasticBuffer_reg
+-- Compiling entity EB_controller
+-- Compiling architecture EBC1 of EB_controller
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/modelsim/TB_circuit.vhd {2 {vcom -work work -2002 -explicit -stats=none D:/00.LAP/00.ElasticPipeline/modelsim/TB_circuit.vhd
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Loading package std_logic_textio
+-- Compiling entity TB_circuit
+-- Compiling architecture tb_circ_naive of TB_circuit
+** Warning: D:/00.LAP/00.ElasticPipeline/modelsim/TB_circuit.vhd(51): (vcom-1194) FILE declaration was written using VHDL 1987 syntax.
+
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/vhdl/reg.vhd {1 {vcom -work work -2002 -explicit -stats=none {D:\00.LAP\00.ElasticPipeline\vhdl\reg.vhd}
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity reg
+-- Compiling architecture reg1 of reg
+-- Compiling architecture actuallyNotBuggy of reg
+-- Loading entity reg
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/vhdl/regFile.vhd {1 {vcom -work work -2002 -explicit -stats=none D:/00.LAP/00.ElasticPipeline/vhdl/regFile.vhd
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity regFile
+-- Compiling architecture regFile1 of regFile
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/modelsim/TB_rf.vhd {1 {vcom -work work -2002 -explicit -stats=none D:/00.LAP/00.ElasticPipeline/modelsim/TB_rf.vhd
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Loading package std_logic_textio
+-- Compiling entity TB_rf
+-- Compiling architecture testbench of TB_rf
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/vhdl/ElasticBuffer_latch.vhd {1 {vcom -work work -2002 -explicit -stats=none D:/00.LAP/00.ElasticPipeline/vhdl/ElasticBuffer_latch.vhd
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Compiling entity ElasticBuffer_latch
+-- Compiling architecture EBL1 of ElasticBuffer_latch
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/vhdl/circuit.vhd {1 {vcom -work work -2002 -explicit -stats=none D:/00.LAP/00.ElasticPipeline/vhdl/circuit.vhd
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity circuit
+-- Compiling architecture vanilla of circuit
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/modelsim/TB_IFD.vhd {2 {vcom -work work -2002 -explicit -stats=none D:/00.LAP/00.ElasticPipeline/modelsim/TB_IFD.vhd
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Loading package std_logic_textio
+-- Compiling entity TB_IFD
+-- Compiling architecture testbench of TB_IFD
+** Warning: D:/00.LAP/00.ElasticPipeline/modelsim/TB_IFD.vhd(62): (vcom-1194) FILE declaration was written using VHDL 1987 syntax.
+
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/modelsim/TB_opu.vhd {1 {vcom -work work -2002 -explicit -stats=none D:/00.LAP/00.ElasticPipeline/modelsim/TB_opu.vhd
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Loading package std_logic_textio
+-- Compiling entity TB_opu
+-- Compiling architecture testbench of TB_opu
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/vhdl/OP_unit.vhd {1 {vcom -work work -2002 -explicit -stats=none D:/00.LAP/00.ElasticPipeline/vhdl/OP_unit.vhd
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity OP_unit
+-- Compiling architecture OP_unit1 of OP_unit
+-- Compiling entity sample_op_0
+-- Compiling architecture s1 of sample_op_0
+-- Loading package std_logic_arith
+-- Loading package STD_LOGIC_UNSIGNED
+-- Compiling entity multiplier
+-- Compiling architecture multiplier1 of multiplier
+-- Compiling entity adder
+-- Compiling architecture adder1 of adder
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/modelsim/TB_reg.vhd {1 {vcom -work work -2002 -explicit -stats=none {D:\00.LAP\00.ElasticPipeline\modelsim\TB_reg.vhd}
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Loading package std_logic_textio
+-- Compiling entity TB_reg
+-- Compiling architecture testbench of TB_reg
+-- Loading entity reg
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/modelsim/TB_elasticBuffer.vhd {1 {vcom -work work -2002 -explicit -stats=none D:/00.LAP/00.ElasticPipeline/modelsim/TB_elasticBuffer.vhd
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Loading package std_logic_textio
+-- Compiling entity TB_EB
+-- Compiling architecture testbench of TB_EB
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/vhdl/IFD.vhd {1 {vcom -work work -2002 -explicit -stats=none D:/00.LAP/00.ElasticPipeline/vhdl/IFD.vhd
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity IFD
+-- Compiling architecture IFD1 of IFD
+-- Compiling entity controller
+-- Compiling architecture controller1 of controller
+-- Compiling entity PC
+-- Compiling architecture PC1 of PC
+-- Compiling entity IR
+-- Compiling architecture IR1 of IR
+
+} {} {}} D:/00.LAP/00.ElasticPipeline/modelsim/TB_eb_controller.vhd {1 {vcom -work work -2002 -explicit -stats=none D:/00.LAP/00.ElasticPipeline/modelsim/TB_eb_controller.vhd
+Model Technology ModelSim ALTERA vcom 10.3d Compiler 2014.10 Oct  7 2014
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Loading package std_logic_textio
+-- Compiling entity TB_eb_controller
+-- Compiling architecture testbench of TB_eb_controller
+
+} {} {}}
