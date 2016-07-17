@@ -1,7 +1,0 @@
-restart -f
-
-force clk 0 0, 1 5 -repeat 10
-force reset 1 0, 0 12
-
-force d_in 0 0, #10#5 10, 0 30, #10#5 40, 0 60
-force enable 0 0, 1 5, 0 20, 1 45, 0 50 
