@@ -14,6 +14,6 @@ architecture EBL1 of ElasticBuffer_latch is
 
 begin
 
-
+	--todo
 
 end EBL1;

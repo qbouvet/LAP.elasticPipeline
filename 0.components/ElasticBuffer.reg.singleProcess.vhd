@@ -74,7 +74,7 @@ end;
 
 
 
---------------------------------------------------------------------------
+--------------------------------------------------------------------------   CONTROLLER
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -102,21 +102,17 @@ architecture EBC1 of EB_controller is
 	
 begin
 	
-	-- rotate states
-	process(clk, reset)
-	begin
-	if(reset='1')then
-		currentState <= EMPTY;
-	else
-		if(rising_edge(clk)) then
-			currentState <= nextState;
-		end if;
-	end if;
-	end process;
-	
 	-- states transitions
 	process(currentState, n_ready, p_valid)
 	begin
+	if(reset='1') then
+		currentState <= EMPTY;
+		valid <= '0';
+		ready <= '0';
+		main_wren <= '1';
+		aux_wren <= '0';
+		mux_sel <= '0';
+	else 
 		if(currentState=EMPTY) then
 			valid <= '0';
 			ready <= '1';
@@ -163,5 +159,55 @@ begin
 			end if;
 		
 		end if;
+		if(rising_edge(clk)) then
+		if(currentState=EMPTY) then
+			valid <= '0';
+			ready <= '1';
+			
+			-- main_wren <= p_valid;
+			main_wren <= '1';
+			aux_wren <= '0';
+			mux_sel <= '0';
+			
+			if(p_valid='1') then
+				nextState <= HALF;
+			else
+				nextState <= EMPTY;
+			end if;
+			
+		elsif (currentState=HALF) then
+			valid <= '1';
+			ready <= '1';
+			
+			main_wren <= p_valid and n_ready;
+			aux_wren <= not n_ready;
+			mux_sel <= '0';
+			
+			if((p_valid xor n_ready)='0') then
+				nextState <= HALF;
+			elsif(p_valid='1') then -- not n_ready -> on stocke
+				nextState <= FULL;
+			else -- not p_valid and next_ready -> on vide
+				nextState <= EMPTY;
+			end if;
+			
+		else -- FULL
+			valid <= '1';
+			ready <= n_ready; -- if next buffer wil accept a value, we can "shift ours" and accept a new one
+			
+			main_wren <= p_valid and n_ready;
+			aux_wren <= p_valid and n_ready;
+			mux_sel <= p_valid and n_ready;
+				
+			if(n_ready='0' or p_valid ='1') then
+				nextState <= FULL; -- either we stall, or we shift
+			else -- n_ready and not p_valid : main -> output, aux -> main
+				nextState <= HALF;
+			end if;
+		
+		end if;
+			currentState <= nextState;
+		end if;
+	end if;
 	end process;
 end EBC1;
