@@ -149,6 +149,52 @@ end atc;
 
 
 
+------------------------------------------------------------  ATC_reg
+---------------------------------------------------------------------
+-- a single single flip-flop for the shift register we'll use 
+-- in the antitoken channel
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity antitokenChannel_reg is 
+port(	clk, reset,
+		antitoken,
+		isInsertionSpot,
+		wrenable,
+		d_in : in std_logic;
+		d_ou : out std_logic);
+end antitokenChannel_reg;
+
+architecture antitokenChannel_reg1 of antitokenChannel_reg is
+	signal heldVal : std_logic;
+	signal d_in_internal : std_logic;
+begin
+
+	-- if we're at the spot matching for $latency, we use the antitoken 
+	-- as input signal. Else, we will use the previous reg's output
+	d_in_internal <= d_in when isInsertionSpot='0' else antitoken;	
+		
+	holdValue : process(clk, reset, antitoken, isInsertionSpot, d_in)
+	begin
+		if(rising_edge(clk))then
+			if(wrenable='1') then
+				heldVal <= d_in_internal;
+			end if;
+		end if;
+	end process;
+
+	-- async reset
+	process(reset)
+	begin
+		if(reset='1')then
+			heldVal <= '0';
+		end if;
+	end process;
+
+end antitokenChannel_reg1;
+
+
+
 --------------------------------------------------  ATC_shiftRegister
 ---------------------------------------------------------------------
 -- a shift register composed of the register units described below
@@ -169,13 +215,8 @@ architecture antitokenChannel_shiftRegister1 of antitokenChannel_shiftRegister i
 	signal tokenInsertionSpot : std_logic_vector(7 downto 0); 
 	-- we could possible add one more register with the same size for tokenLatency
 	-- since having a 'latency 0' antitoken channel is useless (and mokes no sense)
-	--																					-- or does it ???
 	signal d_in_internal : std_logic_vector(6 downto 0);
-	signal clockSubstitute : std_logic;
 begin
-
-	--will shift only when allowed to
-	clockSubstitute <= clk and enableShift;
 
 	--sets the tokenInsertionSpot vector
 	insertionSpotVector : process(clk, reset, tokenLatency)
@@ -186,62 +227,12 @@ begin
 
 	-- 8 registers instanciation
 	
-	lastReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(0), d_in_internal(0), timeout);
+	lastReg : entity work.antitokenChannel_reg port map(clk, reset, antiToken, enableShift, tokenInsertionSpot(0), d_in_internal(0), timeout);
 	genShiftRegister : for i in 1 to 6 generate
-		internalReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(i), d_in_internal(i), d_in_internal(i-1));
+		internalReg : entity work.antitokenChannel_reg port map(clk, reset, antiToken, enableShift, tokenInsertionSpot(i), d_in_internal(i), d_in_internal(i-1));
 	end generate genShiftRegister;
-	firstReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(7), '0', d_in_internal(6));
+	firstReg : entity work.antitokenChannel_reg port map(clk, reset, antiToken, enableShift, tokenInsertionSpot(7), '0', d_in_internal(6));
 	
 	-- async reset done by port mapping the reset signal
 	
 end antitokenChannel_shiftRegister1;
-
-
-
-------------------------------------------------------------  ATC_reg
----------------------------------------------------------------------
--- a single single flip-flop for the shift register we'll use 
--- in the antitoken channel
-library ieee;
-use ieee.std_logic_1164.all;
-
-entity antitokenChannel_reg is 
-port(	clk, reset,
-		antitoken,
-		isInsertionSpot,
-		d_in : in std_logic;
-		d_ou : out std_logic);
-end antitokenChannel_reg;
-
-architecture antitokenChannel_reg1 of antitokenChannel_reg is
-	signal heldVal : std_logic;
-	signal clockSubstitute : std_logic;
-	signal d_in_internal : std_logic;
-begin
-
-	-- internal "enable" and "data to write" change wether the register
-	-- is at the spot matching the latency of the antitoken or not
-	d_in_internal <= d_in when isInsertionSpot='0' else '1';
-		-- the trick here is : we receive antitokens at/shortly after 
-		-- clk edge, so at this time, clk should be up
-		-- this 'and' permits to bring the signal down with the clock, 
-		-- so that at the new clock cycle, we can get a new rising edge 
-		-- to 'write enable' the register with (cf paper schematics)
-	clockSubstitute <= clk and antitoken when isInsertionSpot='1' else clk;
-	
-	holdValue : process(clk, reset, antitoken, isInsertionSpot, d_in)
-	begin
-		if(rising_edge(clockSubstitute))then
-			heldVal <= d_in_internal;
-		end if;
-	end process;
-
-	-- async reset
-	process(reset)
-	begin
-		if(reset='1')then
-			heldVal <= '0';
-		end if;
-	end process;
-
-end antitokenChannel_reg1;
