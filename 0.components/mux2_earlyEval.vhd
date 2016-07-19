@@ -188,9 +188,9 @@ begin
 	
 	lastReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(0), d_in_internal(0), timeout);
 	genShiftRegister : for i in 1 to 6 generate
-		internalReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(i), d_in_internal(i+1), d_in_internal(i));
+		internalReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(i), d_in_internal(i), d_in_internal(i-1));
 	end generate genShiftRegister;
-	firstReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(6), '0', d_in_internal(6));
+	firstReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(7), '0', d_in_internal(6));
 	
 	-- async reset done by port mapping the reset signal
 	
