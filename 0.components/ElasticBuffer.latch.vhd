@@ -1,3 +1,5 @@
+-- will be written to compare with a 2-register s implementation if need be
+
 library ieee;
 use ieee.std_logic_1164.all;
 
