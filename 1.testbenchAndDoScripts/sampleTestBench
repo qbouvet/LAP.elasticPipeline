@@ -1,0 +1,64 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity [name] is 
+end [name];
+
+architecture testbench of [name] is
+	
+	signal finished    : boolean := false;
+    signal currenttime : time    := 0 ns;	
+	signal reset : std_logic;
+	signal clk : std_logic := '0';
+	constant CLK_PERIOD : time := 10 ns;		
+	
+begin
+	
+	-- run simulation
+	sim : process
+		procedure resetSim is
+			begin
+				reset <= '1';
+				wait until rising_edge(clk);
+				wait for(3 * CLK_PERIOD / 4);
+				reset<='0';
+		end procedure resetSim;
+	begin
+	
+	end process;
+	
+	-- instantiate design under test
+	DUT : entity work.----- port map( ----- )
+	
+	-- ticks the clock
+	clock : process
+    begin
+        if (finished) then
+            wait;
+        else
+            clk <= not clk;
+            wait for CLK_PERIOD / 2;
+            currenttime <= currenttime + CLK_PERIOD / 2;
+        end if;
+    end process clock;
+      
+end testbench;
+
+
+
+
+
+-- a few text output procedures
+----------------------------------------------------------------------------------------------------
+
+		variable console_out : line;
+		procedure newline is
+		begin
+			console_out := new string'("");
+			writeline(output, console_out);
+		end procedure newline;
+		procedure print(msg : in string) is
+		begin
+			console_out := new string'(msg);
+			writeline(output, console_out);
+		end procedure print;
