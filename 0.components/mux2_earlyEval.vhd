@@ -65,7 +65,7 @@ begin
 	valid <= p_valid1 when sel='1' else p_valid0;
 	ready <= n_ready; -- the "ready when active antitoken" is done at the antitoken channel
 
-	process(clk, reset,	p_valid1, p_valid0, sel, n_ready)
+	antitokensGeneration : process(clk, reset,	p_valid1, p_valid0, sel, n_ready)
 	begin
 		-- reset previous antitokens signals and issue new antitoken if early evaluating
 		if(rising_edge(clk))then
@@ -130,7 +130,7 @@ begin
 	shiftReg : entity work.antitokenChannel_shiftRegister port map(clk, reset, enableShift, antiT, tokenLatency, tokenTimeout);
 	
 	-- stop shifting when timed out until we discarded one valid='1' signal
-	process(clk, reset, tokenTimeOut)
+	controlShifting : process(clk, reset, tokenTimeOut)
 	begin
 		enableShift <= not tokenTimeOut;
 		if(rising_edge(clk))then
@@ -178,7 +178,7 @@ begin
 	clockSubstitute <= clk and enableShift;
 
 	--sets the tokenInsertionSpot vector
-	process(clk, reset, tokenLatency)
+	insertionSpotVector : process(clk, reset, tokenLatency)
 	begin
 		tokenInsertionSpot <= (others => '0');
 		tokenInsertionSpot(conv_integer(tokenLatency)) <= '1';
@@ -190,7 +190,7 @@ begin
 	genShiftRegister : for i in 1 to 6 generate
 		internalReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(i), d_in_internal(i+1), d_in_internal(i));
 	end generate genShiftRegister;
-	firstReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(7), '0', d_in_internal(6));
+	firstReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(6), '0', d_in_internal(6));
 	
 	-- async reset done by port mapping the reset signal
 	
@@ -229,7 +229,7 @@ begin
 		-- to 'write enable' the register with (cf paper schematics)
 	clockSubstitute <= clk and antitoken when isInsertionSpot='1' else clk;
 	
-	process(clk, reset, antitoken, isInsertionSpot, d_in)
+	holdValue : process(clk, reset, antitoken, isInsertionSpot, d_in)
 	begin
 		if(rising_edge(clockSubstitute))then
 			heldVal <= d_in_internal;
