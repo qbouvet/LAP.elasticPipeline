@@ -28,20 +28,8 @@ architecture testbench of TB_reg is
 	signal enable : std_logic;
 	
 begin
-	-- ticks the clock
-	clock : process
-    begin
-        if (finished) then
-            wait;
-        else
-            clk <= not clk;
-            wait for CLK_PERIOD / 2;
-            currenttime <= currenttime + CLK_PERIOD / 2;
-        end if;
-    end process clock;
-	
--- run simulation
-	sim : process is	
+
+	setSignals : process is
 		procedure reset_sim is
 		begin
 			reset <= '1';
@@ -53,14 +41,37 @@ begin
 		end procedure reset_sim;
 	begin
 		reset_sim;
-		
-		d_in <= X"00000005";
 		wait until rising_edge(clk);
-		enable <= '1';
-		wait for 2 * CLK_PERIOD;
+		if(not finished)then
+			d_in <= X"00000000", X"00000005" after 20 ns;
+			enable <= '0', '1' after 20 NS, '0' after 30 ns;
+			wait for CLK_PERIOD * 10;
+		end if;
+	end process setSignals;
+	
+-- run simulation
+	sim : process is	
+	begin
+	
+		wait until reset='0';
+		
+		wait until rising_edge(clk);
+		wait for 10 * CLK_PERIOD;
 				
 		finished <= true;
 	end process;
+
+	-- ticks the clock
+	clock : process
+    begin
+        if (finished) then
+            wait;
+        else
+            clk <= not clk;
+            wait for CLK_PERIOD / 2;
+            currenttime <= currenttime + CLK_PERIOD / 2;
+        end if;
+    end process clock;
 	
 -- instantiate component
 	DUT : entity work.reg(reg1) port map(clk, reset, d_in, enable, d_out);
