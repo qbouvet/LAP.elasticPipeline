@@ -20,25 +20,24 @@ port(
 	a, b : in std_logic_vector(31 downto 0);
 	sel : in std_logic;
 	n_ready, p_valid0, p_valid1 : in std_logic;
-	d_in0 : in std_logic_vector(31 downto 0);
-	d_in1 : in std_logic_vector(31 downto 0);
+	d_in0, d_in1 : in std_logic_vector(31 downto 0);
 	d_out : out std_logic_vector(31 downto 0);
 	readyOnChan0, readyOnChan1, valid : out std_logic);
 end mux2_earlyEval;
 
-architecture mux2_earlyEval1 is
-	signal antiT0, antiT1, ready_internal, chan0_valid_internal, chan1_valid1_internal : std_logic;
+architecture mux2_earlyEval1 of mux2_earlyEval is
+	signal antiT0, antiT1, ready_internal, chan0_valid_internal, chan1_valid_internal : std_logic;
 begin
 	
 	d_out <= d_in0 when sel='0' else d_in1;
 	
-	entity join2_eem port map(clk, reset, sel, chan0_valid_internal, chan1_valid_internal, n_ready, antiT0, antiT1, valid, ready_internal);
+	comp0 : entity work.join2_eem(j2) port map(clk, reset, sel, chan0_valid_internal, chan1_valid_internal, n_ready, antiT0, antiT1, valid, ready_internal);
 	
 	-- channel 1 : antitoken of latency 2 in our example
-	entity antitokenChannel port map(clk, reset, antiT1, n_ready, "010", chan1_valid_internal1, readyOnChan1);
+	comp1 : entity work.antitokenChannel(atc) port map(clk, reset, antiT1, chan1_valid_internal, n_ready, "010", chan1_valid_internal, readyOnChan1);
 	-- channel 0 : no antitoken in our example
-	readyOnChan0 <= ready;
-	chan0_valid_internal <= p_valid_1;	
+	readyOnChan0 <= n_ready;
+	chan0_valid_internal <= p_valid1;	
 	
 end mux2_earlyEval1;
 
@@ -71,8 +70,8 @@ begin
 		-- reset previous antitokens signals and issue new antitoken if early evaluating
 		if(rising_edge(clk))then
 			antiT0 <='0';
-			antiT2 <='0';
-			if(n_ready)then
+			antiT1 <='0';
+			if(n_ready='1')then
 				if(p_valid0='1' and sel='0' and p_valid1='0')then
 					antiT1 <= '1';
 				elsif(p_valid1='1' and sel='1' and p_valid0='0')then
@@ -88,12 +87,12 @@ begin
 		if(reset='1')then
 			valid <= '0';
 			ready <= '0';
+			antiT0 <= '0';
 			antiT1 <= '0';
-			antiT2 <= '0';
 		end if;
 	end process;
 
-end j2_eem;
+end j2;
 
 
 
@@ -105,8 +104,8 @@ end j2_eem;
 -- 	1. each token is represented by a 1 in a shift register
 --  2. $latency determines in which register new tokens are inserted
 -- 	3. registers shift at each clock, discard data when '1' in last
--- NB : $latency should not be changed once the component is instanciated - it
--- 		only exists to implement channels of different latencies 
+-- NB : $latency should not be changed once the component is instanciated 
+--		it only exists to implement channels with different latencies 
 --
 -- 				cf. paper for much easier understanding
 library ieee;
@@ -118,38 +117,34 @@ port( 	clk, reset,
 		p_valid, n_ready : in std_logic;
 		tokenLatency : in std_logic_vector(2 downto 0);
 		valid, ready : out std_logic);
-end antitoken_channel;
+end antitokenChannel;
 
 architecture atc of antitokenChannel is 
 	signal tokenTimeOut : std_logic;
 	signal enableShift : std_logic;
 begin
 
-	-- when do we enable shifting ?																-- TODO
+	-- shifting en/disabled by masking (and) the clock with the shiftEnable signal
 	
 	-- shift register that permits latency countdown and multiple tokens 
-	entity antitokenChannel_shiftRegister port map(clk, reset, enableShift, antiT, tokenLatency, tokenTimeout);
+	shiftReg : entity work.antitokenChannel_shiftRegister port map(clk, reset, enableShift, antiT, tokenLatency, tokenTimeout);
 	
 	-- stop shifting when timed out until we discarded one valid='1' signal
 	process(clk, reset, tokenTimeOut)
 	begin
-		enableShift <= tokenTimedOut;
-		if(rising_edge(p_valid))then
-			enableShift <= '1';												-- timing issues ?? (pass it through a register of some kind ?)
+		enableShift <= not tokenTimeOut;
+		if(rising_edge(clk))then
+			if(p_valid='1')then
+				enableShift <= '1';												-- timing issues ?? (pass it through a register of some kind ?)
+			end if;
 		end if;
 	end process;
 	
 	-- signals mapping (cf paper doc)
-	valid <= '0' when tokenTimeOut else p_valid;	
+	valid <= '0' when tokenTimeOut='1' else p_valid;	
 	ready <= n_ready;
 
-	-- asynchronous reset
-	process(reset)
-	begin
-		if(reset='1')then
-			--reset everything
-		end if
-	end process;
+	-- asynchronous reset - via signal mapping to shift register
 end atc;
 
 
@@ -160,7 +155,7 @@ end atc;
 -- contains 8 registers -> up to a latency 7 antitoken
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
+use ieee.std_logic_unsigned.all;
 
 entity antitokenChannel_shiftRegister is
 port(	clk, reset,
@@ -180,21 +175,22 @@ architecture antitokenChannel_shiftRegister1 of antitokenChannel_shiftRegister i
 begin
 
 	--will shift only when allowed to
-	clockSubstitute <= clock and enableShift
+	clockSubstitute <= clk and enableShift;
 
 	--sets the tokenInsertionSpot vector
 	process(clk, reset, tokenLatency)
 	begin
 		tokenInsertionSpot <= (others => '0');
-		tokenInsertionSpot(unsigned(tokenLatency)) <= '1';
+		tokenInsertionSpot(conv_integer(tokenLatency)) <= '1';
 	end process;
 
 	-- 8 registers instanciation
-	entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(0), d_in_internal(0), timeout);
-	for i in 1 to 6 loop
-		entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(i), d_in_internal(i+1), d_in_internal(i));
-	end loop;
-	entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(7), '0', d_in_internal(7);
+	
+	lastReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(0), d_in_internal(0), timeout);
+	genShiftRegister : for i in 1 to 6 generate
+		internalReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(i), d_in_internal(i+1), d_in_internal(i));
+	end generate genShiftRegister;
+	firstReg : entity work.antitokenChannel_reg port map(clockSubstitute, reset, antiToken, tokenInsertionSpot(7), '0', d_in_internal(6));
 	
 	-- async reset done by port mapping the reset signal
 	
@@ -215,19 +211,19 @@ port(	clk, reset,
 		isInsertionSpot,
 		d_in : in std_logic;
 		d_ou : out std_logic);
-end antitoken_reg;
+end antitokenChannel_reg;
 
 architecture antitokenChannel_reg1 of antitokenChannel_reg is
-	heldVal : std_logic;
-	clockSubstitute : std_logic;
-	d_in_internal : std_logic;
+	signal heldVal : std_logic;
+	signal clockSubstitute : std_logic;
+	signal d_in_internal : std_logic;
 begin
 
 	-- internal "enable" and "data to write" change wether the register
 	-- is at the spot matching the latency of the antitoken or not
 	d_in_internal <= d_in when isInsertionSpot='0' else '1';
-		-- the trick here is : we receive AT at/shortly after clk edge
-		-- at this time, clk should be up
+		-- the trick here is : we receive antitokens at/shortly after 
+		-- clk edge, so at this time, clk should be up
 		-- this 'and' permits to bring the signal down with the clock, 
 		-- so that at the new clock cycle, we can get a new rising edge 
 		-- to 'write enable' the register with (cf paper schematics)
