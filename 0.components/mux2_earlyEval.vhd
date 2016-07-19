@@ -149,6 +149,50 @@ end atc;
 
 
 
+--------------------------------------------------  ATC_shiftRegister
+---------------------------------------------------------------------
+-- a shift register composed of the register units described below
+-- contains 8 registers -> up to a latency 7 antitoken
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+entity antitokenChannel_shiftRegister is
+port(	clk, reset,
+		enableShift,
+		antiToken : in std_logic;
+		tokenLatency : in std_logic_vector(2 downto 0);
+		timeout : out std_logic);
+end antitokenChannel_shiftRegister;
+
+architecture antitokenChannel_shiftRegister1 of antitokenChannel_shiftRegister is
+	signal tokenInsertionSpot : std_logic_vector(7 downto 0); 
+	-- we could possible add one more register with the same size for tokenLatency
+	-- since having a 'latency 0' antitoken channel is useless (and mokes no sense)
+	signal d_in_internal : std_logic_vector(6 downto 0);
+begin
+
+	--sets the tokenInsertionSpot vector
+	insertionSpotVector : process(clk, reset, tokenLatency)
+	begin
+		tokenInsertionSpot <= (others => '0');
+		tokenInsertionSpot(conv_integer(tokenLatency)) <= '1';
+	end process;
+
+	-- 8 registers instanciation
+	
+	lastReg : entity work.antitokenChannel_reg port map(clk, reset, antiToken, enableShift, tokenInsertionSpot(0), d_in_internal(0), timeout);
+	genShiftRegister : for i in 1 to 6 generate
+		internalReg : entity work.antitokenChannel_reg port map(clk, reset, antiToken, enableShift, tokenInsertionSpot(i), d_in_internal(i), d_in_internal(i-1));
+	end generate genShiftRegister;
+	firstReg : entity work.antitokenChannel_reg port map(clk, reset, antiToken, enableShift, tokenInsertionSpot(7), '0', d_in_internal(6));
+	
+	-- async reset done by port mapping the reset signal
+	
+end antitokenChannel_shiftRegister1;
+
+
+
 ------------------------------------------------------------  ATC_reg
 ---------------------------------------------------------------------
 -- a single single flip-flop for the shift register we'll use 
@@ -193,46 +237,3 @@ begin
 
 end antitokenChannel_reg1;
 
-
-
---------------------------------------------------  ATC_shiftRegister
----------------------------------------------------------------------
--- a shift register composed of the register units described below
--- contains 8 registers -> up to a latency 7 antitoken
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
-
-entity antitokenChannel_shiftRegister is
-port(	clk, reset,
-		enableShift,
-		antiToken : in std_logic;
-		tokenLatency : in std_logic_vector(2 downto 0);
-		timeout : out std_logic);
-end antitokenChannel_shiftRegister;
-
-architecture antitokenChannel_shiftRegister1 of antitokenChannel_shiftRegister is
-	signal tokenInsertionSpot : std_logic_vector(7 downto 0); 
-	-- we could possible add one more register with the same size for tokenLatency
-	-- since having a 'latency 0' antitoken channel is useless (and mokes no sense)
-	signal d_in_internal : std_logic_vector(6 downto 0);
-begin
-
-	--sets the tokenInsertionSpot vector
-	insertionSpotVector : process(clk, reset, tokenLatency)
-	begin
-		tokenInsertionSpot <= (others => '0');
-		tokenInsertionSpot(conv_integer(tokenLatency)) <= '1';
-	end process;
-
-	-- 8 registers instanciation
-	
-	lastReg : entity work.antitokenChannel_reg port map(clk, reset, antiToken, enableShift, tokenInsertionSpot(0), d_in_internal(0), timeout);
-	genShiftRegister : for i in 1 to 6 generate
-		internalReg : entity work.antitokenChannel_reg port map(clk, reset, antiToken, enableShift, tokenInsertionSpot(i), d_in_internal(i), d_in_internal(i-1));
-	end generate genShiftRegister;
-	firstReg : entity work.antitokenChannel_reg port map(clk, reset, antiToken, enableShift, tokenInsertionSpot(7), '0', d_in_internal(6));
-	
-	-- async reset done by port mapping the reset signal
-	
-end antitokenChannel_shiftRegister1;
