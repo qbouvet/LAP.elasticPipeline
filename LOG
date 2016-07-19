@@ -1,0 +1,21 @@
+TODO	
+
+testbench for the antitoken channel's shift register
+re-do the antitoken channel architecture in regards to stalling the register shifting
+testbench the antitoken channel
+
+debug the rest of the early evaluation multiplexer
+
+
+
+
+
+
+DONE
+
+debugged antitoken channel's shift register
+
+
+
+
+
