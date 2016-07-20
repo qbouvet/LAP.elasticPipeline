@@ -137,7 +137,32 @@ port( 	clk, reset,
 		valid, ready : out std_logic);
 end antitokenChannel;
 
-architecture atc of antitokenChannel is 
+architecture invertedClock of antitokenChannel is 
+	signal tokenTimeOut : std_logic;
+	signal enableShift : std_logic;
+	signal notClock : std_logic;
+begin
+
+	--an inverted clock signal so that the shift register loads/shifts on falling clk
+	notClock <= not clk;
+
+	-- computes Wether we will shift or not a this clock cycle
+	enabler : entity work.ATC_enableBlock(ATC_enableBlock1) 
+		port map(tokenTimeOut, p_valid, n_ready, enableShift);
+	
+	-- shift register that permits latency countdown and multiple tokens 
+	--shiftReg : entity work.antitokenChannel_shiftRegister port map(clk, reset, enableShift, antiT, wantedLatency, tokenTimeout);		--debug	
+	shiftReg : entity work.antitokenChannel_shiftRegister 
+		port map(notClock, reset, enableShift, antiT, wantedLatency,open, tokenTimeout);		--debug	
+	
+	-- signals mapping (cf paper doc)
+	valid <= '0' when tokenTimeOut='1' else p_valid;	
+	ready <= '1' when tokenTimeOut='1' else n_ready;
+
+	-- reset via signal mapping to shift register
+end invertedClock;
+
+architecture antitokenChannel1 of antitokenChannel is 
 	signal tokenTimeOut : std_logic;
 	signal enableShift : std_logic;
 begin
@@ -156,4 +181,4 @@ begin
 	ready <= '1' when tokenTimeOut='1' else n_ready;
 
 	-- reset via signal mapping to shift register
-end atc;
+end antitokenChannel1;
