@@ -1,5 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_textio.all;
+use std.textio.all;
 
 entity tb_atc_shiftReg is 
 end tb_atc_shiftReg;
@@ -23,7 +25,7 @@ begin
 	--assign signals
 	setSignals : process
 		procedure resetSim is
-		begin
+		begin -- no longer used
 			reset <= '1';
 			enableShift <= '0';
 			antitoken <= '0';
@@ -32,18 +34,76 @@ begin
 			wait for(3 * CLK_PERIOD / 4);
 			reset<='0';
 		end procedure resetSim;
+		--text processing
+		variable console_out : line;
+		procedure newline is
+		begin
+			console_out := new string'("");
+			writeline(output, console_out);
+		end procedure newline;
+		procedure print(msg : in string) is
+		begin
+			console_out := new string'(msg);
+			writeline(output, console_out);
+		end procedure print;
 	begin
-		resetSim;
+		--resetSim; --no longer used
+		wait until rising_edge(clk);
 		if(not finished)then
-			tokenLatency <= "010";
+						
+			--set the inputs for the whole simulation
+			reset <= '1', '0' after 7.5 ns, '1' after 60 ns, '0' after 67.5 ns, '1' after 140 ns, '0' after 147.5 ns, '1' after 210 ns, '0' after 217.5 ns;
+			tokenLatency <= "010", "100" after 210 ns;
+			antitoken <= '0', '1' after 20 ns, '0' after 30 ns, '1' after 70 ns, '0' after 100 ns, '1' after 150 ns, '0' after 160 ns, '1' after 220 ns, '0' after 230 ns, '1' after 260 ns, '0' after 280 ns;
+			
+			enableShift <= '1'; --changes here happen right after the clock edge, this signal will be set using the usual syntax through the sim
+			--enableShift <= '1', '1' after 150 ns, '0' after 160 ns, '1' after 170 ns, '0' after 271 ns, '1' after 290 ns ;
+			
+			-- single token
+			newline;print("latency of 2 *clock+enable* cycles");
+			newline;Print("antitoken 1 at 20 ns, single antitoken should timeout at 50ns");
+			wait until currenttime = 49 ns; wait until rising_edge(clk);							-- need to wait until _after_ the rising edge
+			assert timeout='1' report "antitoken 1 didn't timeout" severity error;
+			wait for CLK_PERIOD;
+			assert timeout='0' report "timeout didn't return to 0" severity error;
+			
+			--forget to reset simulation here, nevermind
+			
+			-- continuous arrival of 4 antitokens
+			newline;print("four antitokens following each other starting at 60 ns - numbered 2 to 5 - should timeout between 90 and 130 ns");
+			wait until currenttime = 90 ns; wait until rising_edge(clk);
+			assert timeout='1' report "antitoken 2 didn't timeout" severity error;
+			wait until currenttime = 100 ns; wait until rising_edge(clk);
+			assert timeout='1' report "antitoken 3 didn't timeout" severity error;
+			wait until currenttime = 110 ns; wait until rising_edge(clk);
+			assert timeout='1' report "antitoken 4 didn't timeout" severity error;
+			wait until currenttime = 120 ns; wait until rising_edge(clk);
+			assert timeout='1' report "antitoken 5 didn't timeout" severity error;
+			wait for CLK_PERIOD;
+			assert timeout='0' report "timeout didn't return to 0" severity error;
+			
+			-- check behaviour of enable signal
+			wait until currenttime = 140 ns;
+			wait until rising_edge(clk);
+			newline;print("enable signal correctly stops the antitoken countdown");
+			print("antitoken 6 - inserted at 150 ns - should timeout at 180 ns - register not enabled during one cycle");
+			wait until currentTime=160 ns; wait until rising_edge(clk);
+			enableShift <= '0';
+			wait until currentTime=170 ns; wait until rising_edge(clk);
 			enableShift <= '1';
-			antitoken <= '0', '1' after 20 ns, '0' after 30 ns; 
-			wait for CLK_PERIOD * 10;
+			wait until currenttime=180 ns; wait until rising_edge(clk);
+			assert timeout='1' report "antitoken 6 didn't timeout" severity error;
+			wait for CLK_PERIOD;
+			assert timeout='0' report "timeout didn't return to 0" severity error;
+			
+			--check behaviour of timeout signal (2) with increased latency and several consecutive antitokens
+			wait until currenttime=220 ns;
+			wait until rising_edge(clk);
+			-- todo
+			
+			wait until finished=true;
 		end if;
 	end process;
-	
-	checkValues : process
-	begin
 		
 	
 	--run and stop simulation
@@ -51,7 +111,7 @@ begin
 	begin
 		wait until reset='0';
 		wait until rising_edge(clk);
-		wait for CLK_PERIOD * 10;
+		wait for CLK_PERIOD * 30;
 		finished <= true;
 	end process;
 	
@@ -73,6 +133,14 @@ begin
     
     
 end testbench;
+
+
+
+
+
+
+
+
 
 
 
@@ -138,7 +206,7 @@ begin
         end if;
     end process clock;
     
-end simple;
+end simplified;
 
 
 
