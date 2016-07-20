@@ -73,7 +73,7 @@ begin
 			tokenInsertionSpot <= (others => '0');
 		else
 			tokenInsertionSpot <= (others => '0');
-			tokenInsertionSpot(conv_integer(wantedLatency)) <= '1';
+			tokenInsertionSpot(conv_integer(wantedLatency)-1) <= '1';
 		end if;
 	end process;
 
