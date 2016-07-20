@@ -22,16 +22,13 @@ begin
 
 	antitokensGeneration : process(clk, reset,	p_valid1, p_valid0, sel, n_ready)
 	begin
-		-- reset previous antitokens signals and issue new antitoken if early evaluating
-		if(rising_edge(clk))then
-			antiT0 <='0';
-			antiT1 <='0';
-			if(n_ready='1')then
-				if(p_valid0='1' and sel='0' and p_valid1='0')then
-					antiT1 <= '1';
-				elsif(p_valid1='1' and sel='1' and p_valid0='0')then
-					antiT0<='1';
-				end if;
+		antiT0 <='0';
+		antiT1 <='0';
+		if(n_ready='1')then
+			if(p_valid0='1' and sel='0' and p_valid1='0')then
+				antiT1 <= '1';
+			elsif(p_valid1='1' and sel='1' and p_valid0='0')then
+				antiT0<='1';
 			end if;
 		end if;
 	end process;
@@ -49,7 +46,6 @@ use ieee.numeric_std.all;
 
 entity mux2_earlyEval is
 port(
-	clk, reset : in std_logic;
 	a, b : in std_logic_vector(31 downto 0);
 	sel : in std_logic;
 	n_ready, p_valid0, p_valid1 : in std_logic;
