@@ -38,6 +38,7 @@ end antitokenChannel_reg1;
 
 
 
+
 --------------------------------------------------  ATC_shiftRegister
 ---------------------------------------------------------------------
 -- a shift register composed of the register units described below
@@ -62,7 +63,7 @@ architecture antitokenChannel_shiftRegister1 of antitokenChannel_shiftRegister i
 	signal d_in_internal : std_logic_vector(6 downto 0);
 begin
 
-	vector_out <= tokenInsertionSpot;														--debug
+	vector_out <= tokenInsertionSpot;													--debug
 	
 	-- computes the tokenInsertionSport vector by translating the 3bits integer 
 	-- wantedLatency into a single select bit on the channel matching the integer
@@ -87,6 +88,28 @@ begin
 															tokenInsertionSpot(7), '0', d_in_internal(6));
 	
 end antitokenChannel_shiftRegister1;
+
+
+
+
+---------------------------------------------------   ATC_enableBlock
+---------------------------------------------------------------------
+-- computes in a simple combinatorial way when to enable the shift 
+-- register (when a piece of data flows through the channel OR when
+-- an antitoken timedout and the previous register has valid data)
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity ATC_enableBlock is
+port(	timeout, p_valid, n_ready : in std_logic;
+		enable : out std_logic);
+end ATC_enableBlock;
+
+architecture ATC_enableBlock1 of ATC_enableBlock is
+begin
+	enable <= (timeout and p_valid) or (not timeout and (p_valid and n_ready));	
+end ATC_enableBlock1;
+
 
 
 
@@ -119,26 +142,18 @@ architecture atc of antitokenChannel is
 	signal enableShift : std_logic;
 begin
 
-	-- shifting en/disabled by masking (and) the clock with the shiftEnable signal
+	-- computes Wether we will shift or not a this clock cycle
+	enabler : entity work.ATC_enableBlock(ATC_enableBlock1) 
+		port map(tokenTimeOut, p_valid, n_ready, enableShift);
 	
 	-- shift register that permits latency countdown and multiple tokens 
 	--shiftReg : entity work.antitokenChannel_shiftRegister port map(clk, reset, enableShift, antiT, wantedLatency, tokenTimeout);		--debug	
-	shiftReg : entity work.antitokenChannel_shiftRegister port map(clk, reset, enableShift, antiT, wantedLatency,open, tokenTimeout);		--debug	
-	
-	-- stop shifting when timed out until we discarded one valid='1' signal
-	controlShifting : process(clk, reset, tokenTimeOut)
-	begin
-		enableShift <= not tokenTimeOut;
-		if(rising_edge(clk))then
-			if(p_valid='1')then
-				enableShift <= '1';												-- timing issues ?? (pass it through a register of some kind ?)
-			end if;
-		end if;
-	end process;
+	shiftReg : entity work.antitokenChannel_shiftRegister 
+		port map(clk, reset, enableShift, antiT, wantedLatency,open, tokenTimeout);		--debug	
 	
 	-- signals mapping (cf paper doc)
 	valid <= '0' when tokenTimeOut='1' else p_valid;	
-	ready <= n_ready;
+	ready <= '1' when tokenTimeOut='1' else n_ready;
 
-	-- asynchronous reset - via signal mapping to shift register
+	-- reset via signal mapping to shift register
 end atc;
