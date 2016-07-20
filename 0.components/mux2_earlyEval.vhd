@@ -8,7 +8,6 @@ use ieee.std_logic_1164.all;
 
 entity join2_eem is
 port(
-	clk, reset,
 	sel, 
 	p_valid1, p_valid0, n_ready : in std_logic;
 	antiT1, antiT0, valid, ready : out std_logic);
@@ -46,6 +45,7 @@ use ieee.numeric_std.all;
 
 entity mux2_earlyEval is
 port(
+	clk, reset : in std_logic;
 	a, b : in std_logic_vector(31 downto 0);
 	sel : in std_logic;
 	n_ready, p_valid0, p_valid1 : in std_logic;
@@ -60,7 +60,7 @@ begin
 	
 	d_out <= d_in0 when sel='0' else d_in1;
 	
-	comp0 : entity work.join2_eem(j2) port map(clk, reset, sel, chan0_valid_internal, chan1_valid_internal, n_ready, antiT0, antiT1, valid, ready_internal);
+	comp0 : entity work.join2_eem(j2) port map(sel, chan0_valid_internal, chan1_valid_internal, n_ready, antiT0, antiT1, valid, ready_internal);
 	
 	-- channel 1 : antitoken of latency 2 in our example
 	comp1 : entity work.antitokenChannel(atc) port map(clk, reset, antiT1, chan1_valid_internal, n_ready, "010", chan1_valid_internal, readyOnChan1);
