@@ -35,17 +35,6 @@ begin
 			end if;
 		end if;
 	end process;
-	
-	-- async reset
-	process(reset)
-	begin
-		if(reset='1')then
-			valid <= '0';
-			ready <= '0';
-			antiT0 <= '0';
-			antiT1 <= '0';
-		end if;
-	end process;
 
 end j2;
 
