@@ -33,10 +33,10 @@ architecture eager of fork is
 begin
 
 	--can't combine the signals directly in the port map
-	pValidAndForkStop <=  p_valid and fork_stop;
-	fork_stop <= block_stop0 or block_stop1;
 	n_stop0 <= not n_ready0;
 	n_stop1 <= not n_ready1;
+	fork_stop <= block_stop0 or block_stop1;
+	pValidAndForkStop <=  p_valid and fork_stop;
 
 	regBlock0 : entity work.eagerFork_RegisterBLock 
 					port map(clk, reset, p_valid, n_stop0, pValidAndForkStop, valid0, block_stop0);
@@ -44,7 +44,8 @@ begin
 	regBlock1 : entity work.eagerFork_RegisterBLock 
 					port map(clk, reset, p_valid, n_stop0, pValidAndForkStop, valid1, block_stop1);
 					
-	ready <= not (block_stop0 or block_stop1);
+	ready <= not fork_stop;
+	
 end eager;
 
 
@@ -73,7 +74,7 @@ begin
 	
 	block_stop <= block_stop_internal;
 	
-	reg_in <= block_stop_internal or not p_valid_and_fork_stop;
+	reg_in <= block_stop_internal or (not p_valid_and_fork_stop);
 	
 	valid <= reg_value and p_valid; 
 	
