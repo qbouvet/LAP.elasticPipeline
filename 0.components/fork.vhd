@@ -29,19 +29,20 @@ end lazy;
 
 
 architecture eager of fork is
-	signal fork_stop, block_stop0, block_stop1, n_stop0, n_stop1, temp : std_logic;
+	signal fork_stop, block_stop0, block_stop1, n_stop0, n_stop1, pValidAndForkStop : std_logic;
 begin
 
 	--can't combine the signals directly in the port map
-	temp <=  p_valid and fork_stop;
+	pValidAndForkStop <=  p_valid and fork_stop;
+	fork_stop <= block_stop0 or block_stop1;
 	n_stop0 <= not n_ready0;
 	n_stop1 <= not n_ready1;
 
 	regBlock0 : entity work.eagerFork_RegisterBLock 
-					port map(clk, reset, p_valid, n_stop0, temp, valid0, block_stop0);
+					port map(clk, reset, p_valid, n_stop0, pValidAndForkStop, valid0, block_stop0);
 
 	regBlock1 : entity work.eagerFork_RegisterBLock 
-					port map(clk, reset, p_valid, n_stop0, temp, valid1, block_stop1);
+					port map(clk, reset, p_valid, n_stop0, pValidAndForkStop, valid1, block_stop1);
 					
 	ready <= not (block_stop0 or block_stop1);
 end eager;
@@ -79,7 +80,7 @@ begin
 	reg : process(clk, reset)
 	begin
 		if(reset='1') then
-			reg_value <= '0';
+			reg_value <= '1'; --contains a "stop" signal - must be 1 at reset
 		else
 			if(rising_edge(clk))then
 				reg_value <= reg_in;
