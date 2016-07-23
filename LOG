@@ -1,9 +1,11 @@
 TODO	
 	
-	test join
-	implement fork (2 architectures)
+	do dependence detection unit
+	connect stuff altogether -> need dependance detection unit
+	memory bypass		-> need antitokens
+	discuss eager join to find error in the design
 	
-	think about possible antitoken channel issues	
+	think/read about antitoken channel issuse	
 	implement the latch version of elasticBuffer for comparison
 	debug the rest of the early evaluation multiplexer
 
@@ -13,7 +15,8 @@ TODO
 
 NOTES  
 	
-		what happens if the enable signal stops the shifting, but there's an incomming antitoken (can the situation happen ? case the other )
+	jon : is the (not p_valid) term necessary for the read signal ?
+	what happens if the enable signal stops the shifting, but there's an incomming antitoken (can the situation happen ? case the other )
 	
 	is it a good idea to use not clk for the shift register of the antitoken channel ? -> no
 		
@@ -22,6 +25,9 @@ NOTES
 
 DONE
 
+	understand the eager fork
+	implement fork 
+	test join (lazy)
 	testbench the antitoken channel
 	rework the antitoken channel architecture in regards to when the register stops shifting (based on data transiting instead of purely clock)
 	testbench for the antitoken channel's shift register
