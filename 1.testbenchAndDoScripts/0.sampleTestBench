@@ -26,7 +26,10 @@ begin
 				reset<='0';
 		end procedure resetSim;
 	begin
+	if(not finished)then 
 	
+	end if;
+	finished <= true;
 	end process;
 	
 	-- instantiate design under test
@@ -72,12 +75,14 @@ end testbench;
 -- waiting procedures
 ---------------------------------------------------------------------------------------------------
 			--waiting procedures
+		procedure waitPeriod(constant i : in real) is
+		begin
+			wait for i * CLK_PERIOD;
+		end procedure;		
 		procedure waitPeriod(constant i : in integer) is
 		begin
-			for n in 1 to i loop
-				wait for CLK_PERIOD;
-			end loop;
-		end procedure;		
+			wait for i * CLK_PERIOD;
+		end procedure;	
 		procedure waitForRising(signal sig : in std_logic; constant i : in integer) is
 		begin
 			for n in 1 to i loop
