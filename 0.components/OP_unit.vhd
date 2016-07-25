@@ -11,20 +11,14 @@ entity OP_unit is
 		op, opx : in std_logic_vector (5 downto 0); --may be replaced by oc
 		instr, oc : in std_logic_vector(31 downto 0); -- instr just in case, oc as possible replacement for op, opx
 		
-		res : out std_logic_vector (31 downto 0)
+		res : out std_logic_vector (31 downto 0);
+		
+		p_valid, n_ready : in std_logic;
+		ready, valid : out std_logic
 	);
 end OP_unit;
 
 architecture OP_unit1 of OP_unit is
-	component sample_op_0 is port (
-		a, b : in std_logic_vector(31 downto 0);
-		output : out std_logic_vector(31 downto 0)); 
-	end component;
-	component adder is port(
-		a, b : in std_logic_vector(31 downto 0);
-		res : out std_logic_vector(31 downto 0);
-		carry : out std_logic);
-	end component;
 	signal imm_ext, addi_res, res_op0, res_op1 : std_logic_vector (31 downto 0);
 begin
 
@@ -46,9 +40,9 @@ begin
 	end process;
 	
 -- instantiate operations
-	addi : adder port map(imm_ext, argA, addi_res, open);
-	op0 : sample_op_0 port map (argA, argB, res_op0);
-	op1 : adder port map(argA, X"00000001", res_op1, open);
+	addi : entity work.adder port map(imm_ext, argA, addi_res, open);
+	op0 : entity work.sample_op_0 port map (argA, argB, res_op0);
+	op1 : entity work.adder port map(argA, X"00000001", res_op1, open);
 -- extend the immediate argument to a 32 bits signal
 	imm_ext <= X"0000" & immArg;
 end OP_unit1;
