@@ -3,12 +3,13 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity ElasticBuffer_reg is
+GENERIC(
+	VECT_SIZE : integer);
 port(
-	clk : in std_logic;
-	reset : in std_logic;
+	clk, reset : in std_logic;
 	
-	d_in : in std_logic_vector(31 downto 0);
-	d_out : out std_logic_vector(31 downto 0);
+	d_in : in std_logic_vector(VECT_SIZE-1 downto 0);
+	d_out : out std_logic_vector(VECT_SIZE-1 downto 0);
 	
 	p_valid, n_ready : in std_logic;
 	ready, valid : out std_logic);
@@ -20,8 +21,8 @@ architecture ElasticBuffer_reg1 of ElasticBuffer_reg is
 	signal aux_wren : std_logic;
 	signal main_wren : std_logic;
 	signal mux_sel : std_logic; --selects the auxiliary register at '1', the data input at '0'	
-	signal mainRegData : std_logic_vector(31 downto 0);
-	signal auxRegData : std_logic_vector(31 downto 0);
+	signal mainRegData : std_logic_vector(VECT_SIZE-1 downto 0);
+	signal auxRegData : std_logic_vector(VECT_SIZE-1 downto 0);
 	
 begin
 
