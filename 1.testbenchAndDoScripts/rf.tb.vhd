@@ -14,19 +14,6 @@ architecture testbench of TB_rf is
 	signal clk : std_logic := '0';
 	constant CLK_PERIOD : time := 10 ns;
 	
-	component regFile is port(
-		clk : in std_logic;
-		
-		adr_a : in std_logic_vector(31 downto 0);
-		adr_b : in std_logic_vector(31 downto 0);
-		aa : out std_logic_vector(31 downto 0);
-		ab : out std_logic_vector(31 downto 0);
-		
-		wr_enable : in std_logic;
-		wr_adr : in std_logic_vector(31 downto 0);
-		wr_data : in std_logic_vector(31 downto 0)
-	); end component;
-	
 	signal wr_enable : std_logic;
 	signal adr_a, adr_b, wr_adr, wr_data, aa, ab : std_logic_vector(31 downto 0);
 	signal reset : std_logic; --not used by the component
@@ -76,11 +63,21 @@ begin
 		
 		wait for CLK_PERIOD;
 		finished <= true;
+		assert false report "simulation finished" severity note;
 	end process sim;
 	
 	-- design under test
-	DUT : regFile port map (
-		clk, adr_a, adr_b, aa, ab, wr_enable, wr_adr, wr_data);
+	DUT : entity work.regFile(regFile1) port map (
+		clk, reset, adr_a, adr_b, aa, ab, wr_enable, wr_adr, wr_data, '1', '1', '1', '1', open, open, open, open, open);
+	--entity regFile is port(
+	--clk, reset : in std_logic;
+	--adr_a, adr_b : in std_logic_vector(31 downto 0);
+	--aa, ab : out std_logic_vector(31 downto 0);
+	--adr_validWr : in std_logic; -- replaces wr_enable : we now write whenever there's valid data incomming 
+	--wr_adr, wr_data : in std_logic_vector(31 downto 0);		
+	--adr_validA, n_readyA, adr_validB, n_readyB : in std_logic;
+	--readyA, validA, readyB, validB, readyWr : out std_logic
+	--);
 		
 	-- ticks the clock
 	clock : process
