@@ -18,6 +18,14 @@ entity OP_unit is
 	);
 end OP_unit;
 
+architecture pipelined of OP_unit is
+	signal imm_ext, addi_res, res_op0, res_op1 : std_logic_vector (31 downto 0);
+begin
+
+
+
+end pipelined;
+
 architecture OP_unit1 of OP_unit is
 	signal imm_ext, addi_res, res_op0, res_op1 : std_logic_vector (31 downto 0);
 begin
@@ -60,15 +68,14 @@ end sample_op_0;
 
 architecture s1 of sample_op_0 is
 	signal temp1 : std_logic_vector(31 downto 0);
-	signal waste1, waste2 : std_logic;
 	component adder is port(
 			a, b : in std_logic_vector(31 downto 0); 
 			res : out std_logic_vector(31 downto 0);
 			carry : out std_logic); 
 	end component;
 begin
-	a1 : adder port map (a, b, temp1, waste1);
-	a2 : adder port map (temp1, a, output, waste2);
+	a1 : adder port map (a, b, temp1, open);
+	a2 : adder port map (temp1, a, output, open);
 end s1;
 
 
@@ -76,8 +83,6 @@ end s1;
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.std_logic_arith.all;
-use ieee.std_logic_unsigned.all;
 
 
 entity multiplier is 
@@ -92,9 +97,9 @@ end multiplier;
 architecture multiplier1 of multiplier is	
 	signal res_temp : std_logic_vector (63 downto 0);
 begin
-	res_temp <= a * b;
+	res_temp <= std_logic_vector(unsigned(a) * unsigned(b));
 	res <= res_temp(31 downto 0);
-	overflow <= '0' when res_temp(63 downto 31) = X"00000000" else '1';	
+	overflow <= '0' when res_temp(63 downto 32) = X"00000000" else '1';	
 end multiplier1;
 
 
