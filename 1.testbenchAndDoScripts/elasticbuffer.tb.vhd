@@ -92,15 +92,6 @@ begin
 		reset_sim;
 		
 		
-	-- when p_valid changed at rising edge
-		newline; print("one in");
-		wait until rising_edge(clk);
-		p_valid <= '1';
-		d_in <= X"00000001";
-		wait for CLK_PERIOD;
-		assert d_out=X"00000001" report "wrong output (1)" severity error;
-		
-		
 		
 		finished <= true;	
 		newline; print("done");
@@ -108,10 +99,10 @@ begin
 	end process simulation;
 
 	--instanciating design under test
-	DUT : entity work.ElasticBuffer_reg port map(
-		clk, reset, d_in, d_out, 
-		p_valid, n_ready, ready, valid
-		);
+	DUT : entity work.elasticBuffer_reg 
+		generic map(32)
+		port map(	clk, reset, d_in, d_out, 
+					p_valid, n_ready, ready, valid);
 	
 	clock : process
     begin

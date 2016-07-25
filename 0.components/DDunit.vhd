@@ -7,16 +7,16 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-package DDunit_types is
+package DDU_types is
 	type ADDR_ARRAY is array(integer range <>) of std_logic_vector(4 downto 0);
-end DDunit_types;
+end DDU_types;
 
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use IEEE.math_real."log2";
-use work.DDunit_types.all;
+use work.DDU_types.all;
 
 entity DDU is
 GENERIC ( NUM_INPUT_WR_ADDR : integer );

@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity ElasticBuffer_reg is
+entity elasticBuffer_reg is
 GENERIC(
 	VECT_SIZE : integer);
 port(
@@ -13,10 +13,10 @@ port(
 	
 	p_valid, n_ready : in std_logic;
 	ready, valid : out std_logic);
-end ElasticBuffer_reg;
+end elasticBuffer_reg;
 
 -- implementation (b) (2 flip flop connected sequentially with a multiplexer in between)
-architecture ElasticBuffer_reg1 of ElasticBuffer_reg is
+architecture elasticBuffer_reg1 of elasticBuffer_reg is
 	
 	signal aux_wren : std_logic;
 	signal main_wren : std_logic;
@@ -64,7 +64,7 @@ begin
 	
 	d_out <= mainRegData;
 	
-end ElasticBuffer_reg1;
+end elasticBuffer_reg1;
 
 
 

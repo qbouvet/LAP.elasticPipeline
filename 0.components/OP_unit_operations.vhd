@@ -49,7 +49,7 @@ end pipelined;
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity addBuffered is
+entity adderWithBuffers is
 port(	clk, reset,
 		a, b : in std_logic_vector(31 downto 0);
 		output : out std_logic_vector(31 downto 0);
@@ -59,8 +59,9 @@ port(	clk, reset,
 		p_valid, n_ready : in std_logic;
 		ready, valid: out std_logic
 );
+end adderWithBuffers;
 
-architecture pipelined of addTriBuffered is
+architecture pipelined of adderWithBuffers is
 	addi_res : std_logic_vector(31 downto 0);
 	carry_res : std_logic;
 	buffer_out : array (2 downto 0) of std_logic_vector(32 downto 0);

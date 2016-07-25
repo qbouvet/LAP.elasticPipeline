@@ -1,3 +1,6 @@
+-----------------------------------------------------------   OP_unit
+---------------------------------------------------------------------
+-- the unit that actually executes instructions
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -19,17 +22,11 @@ entity OP_unit is
 end OP_unit;
 
 architecture pipelined of OP_unit is
-	signal imm_ext, addi_res, res_op0, res_op1 : std_logic_vector (31 downto 0);
+	signal imm_ext, addi_res, op0_res, op1_res : std_logic_vector (31 downto 0);
+	signal f_valid, f_nready, j_pvalid, j_ready : array (1 downto 0) of std_logic;
+	signal f_ready, f_pvalid, j_valid, j_nready : std_logic;
 begin
-
-
-
-end pipelined;
-
-architecture OP_unit1 of OP_unit is
-	signal imm_ext, addi_res, res_op0, res_op1 : std_logic_vector (31 downto 0);
-begin
-
+	
 -- choose the output according to the op/opx/oc
 	process(addi_res, res_op0, res_op1, op, opx, oc)
 	begin
@@ -46,91 +43,58 @@ begin
 			when others => res <= (others => 'U');
 		end case;
 	end process;
-	
--- instantiate operations
-	addi : entity work.adder port map(imm_ext, argA, addi_res, open);
-	op0 : entity work.sample_op_0 port map (argA, argB, res_op0);
-	op1 : entity work.adder port map(argA, X"00000001", res_op1, open);
+
+-- datapath
+	forkOP : entity work.fork(lazy)
+			port map(clk, reset, p_valid, f_nready(0), f_nready(1), f_ready, f_valid(0), f_valid(1));
+			
+	addi : entity work.adderWithBuffers 
+			port map(clk, reset, imm_ext, argA, addi_res, open, f_valid(0), j_ready(0), f_nready(0), j_pvalid(0));
+	op1 : entity work.sample_op_1(pipelined) 
+			port map (clk, reset, argA, argB, op1_res, f_valid(1), j_ready(1), f_nready(1), j_pvalid(1));
+			
+	joinOP : entity work.join(lazy)
+			port map(j_pvalid(0), j_pvalid(1), n_ready, valid, j_ready(0), j_ready(1));
+			
 -- extend the immediate argument to a 32 bits signal
 	imm_ext <= X"0000" & immArg;
-end OP_unit1;
+	
+end pipelined;
 
 
------------------------------------------------------------------------------  f(a,b) = 2*a+b
+
+-----------------------------------------------------------------------------  the selector signal path & select block
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity sample_op_0 is 
-port(
-	a, b : in std_logic_vector(31 downto 0);
-	output : out std_logic_vector(31 downto 0));
-end sample_op_0;
+entity OP_unit_selectorBlock is
+port(	clk, reset : in std_logic;
+		op, opx : in std_logic_vector(5 downto 0);
+		instr, oc : in std_logic_vector(31 downto 0); 
+		ops_results : in array (2 downto 0) of std_logic_vector(31 downto 0);
+		results : out std_logic_vector(31 downto 0);
+		
+		--elastic control signals
+		ifd_valid, n_ready : in std_logic;
+		 
+);
+end OP_unit_selectorBlock;
 
-architecture s1 of sample_op_0 is
-	signal temp1 : std_logic_vector(31 downto 0);
-	component adder is port(
-			a, b : in std_logic_vector(31 downto 0); 
-			res : out std_logic_vector(31 downto 0);
-			carry : out std_logic); 
-	end component;
+architecture OP_unit_selectorBlock1 of OP_unit_selectorBlock is
+	signal delayed_sel : array (1 downto 0) of std_logic_vector(31 downto 0);
+	signal zero : std_logic_vector(19 downto 0) := (others => '0');
 begin
-	a1 : adder port map (a, b, temp1, open);
-	a2 : adder port map (temp1, a, output, open);
-end s1;
+
+	b0 : entity work.elasticBuffer_reg generic map(31 downto 0);
+			port map(reset, clk, zero&op&opx, delayed_sel, );
+	b1 : entity work.elasticBuffer_reg generic map(31 downto 0);
+			port map(reset, clk, );
+	b2 : entity work.elasticBuffer_reg generic map(31 downto 0);
+			port map(reset, clk, );
+
+end OP_unit_selectorBlock1;
 
 
------------------------------------------------------------------------------   Multiplier - fucked up
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-
-
-entity multiplier is 
-	port(
-		a : in std_logic_vector(31 downto 0);
-		b : in std_logic_vector(31 downto 0);
-		res : out std_logic_vector(31 downto 0);
-		overflow : out std_logic
-	);
-end multiplier;
-
-architecture multiplier1 of multiplier is	
-	signal res_temp : std_logic_vector (63 downto 0);
-begin
-	res_temp <= std_logic_vector(unsigned(a) * unsigned(b));
-	res <= res_temp(31 downto 0);
-	overflow <= '0' when res_temp(63 downto 32) = X"00000000" else '1';	
-end multiplier1;
-
-
------------------------------------------------------------------------------   Adder
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-use ieee.std_logic_arith.all;
-use ieee.std_logic_unsigned.all;
-
-entity adder is
-	port (
-		a : in std_logic_vector(31 downto 0);
-		b : in std_logic_vector(31 downto 0);
-		res : out std_logic_vector(31 downto 0);
-		carry : out std_logic
-	);
-end adder;
-
-architecture adder1 of adder is
-
-	signal temp_res : std_logic_vector(32 downto 0);
-
-begin
-	
-	temp_res <= ('0' & a) + ('0' & b);
-	
-	res <= temp_res(31 downto 0);
-	carry <= temp_res(32);
-	
-end adder1;
 
 
 
