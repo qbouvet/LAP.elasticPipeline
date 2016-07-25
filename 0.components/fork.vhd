@@ -56,6 +56,7 @@ end eager;
 -- this block contains the register and the combinatorial logic 
 -- around it, as in the design in cortadella elastis systems (paper 2)
 -- page 3
+-- a simple 2 way eager for uses 2 of those blocks
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -90,3 +91,36 @@ begin
 	end process reg;
 	
 end eagerFork_RegisterBLock1;
+
+
+
+---------------------------------------------------------  forkBlock3
+---------------------------------------------------------------------
+-- rassembles 2 simple forks into a 3 way fork.
+-- used in other components
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity forkBlock3 is
+port(	clk, reset, 
+		p_valid, n_ready0, n_ready1, n_ready2 : in std_logic;
+		valid0, valid1, valid2, ready : out std_logic;
+);
+
+architecture lazy of forkBlock3 is
+
+	signal f0_ready1, f0_valid1 : std_logic;
+			
+	
+begin
+	fork0 : entity work.fork(lazy) --the first fork outputs to the output and to the other fork
+		port map(clk, reset, p_valid, n_ready0, f0_ready1, ready, valid0, f0_valid1);
+	fork1 : entity work.fork(lazy) 
+		port map(clk, reset, f0_valid1, n_ready1, n_ready2, f0_ready1, valid1, valid2);
+end lazy;
+
+
+port(	clk, reset,		-- the eager implementation uses registers
+		p_valid,
+		n_ready0, n_ready1 : in std_logic;
+		ready, valid0, valid1 : out std_logic);
