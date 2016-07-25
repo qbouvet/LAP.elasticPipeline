@@ -15,15 +15,8 @@ port(
 end ElasticBuffer_reg;
 
 -- implementation (b) (2 flip flop connected sequentially with a multiplexer in between)
-architecture EB_seq_reg of ElasticBuffer_reg is
+architecture ElasticBuffer_reg1 of ElasticBuffer_reg is
 	
-	component EB_controller
-		port (
-				reset,clk : in std_logic;
-				n_ready, p_valid : in std_logic;
-				ready, valid: out std_logic;
-				aux_wren, main_wren, mux_sel : out std_logic);
-	end component;
 	signal aux_wren : std_logic;
 	signal main_wren : std_logic;
 	signal mux_sel : std_logic; --selects the auxiliary register at '1', the data input at '0'	
@@ -32,7 +25,7 @@ architecture EB_seq_reg of ElasticBuffer_reg is
 	
 begin
 
-	controller : EB_controller port map (
+	controller : entity work.EB_controller(EB_controller1) port map (
 		reset, clk, n_ready, p_valid, ready, valid, aux_wren, main_wren, mux_sel
 	);
 	
@@ -70,7 +63,7 @@ begin
 	
 	d_out <= mainRegData;
 	
-end;
+end ElasticBuffer_reg1;
 
 
 
@@ -95,7 +88,7 @@ port(
 end EB_controller;
 
 
-architecture EBC1 of EB_controller is
+architecture EB_controller1 of EB_controller is
 
 	type state_t is (EMPTY, HALF, FULL);
 	signal currentState, nextState : state_t;
@@ -164,4 +157,4 @@ begin
 		
 		end if;
 	end process;
-end EBC1;
+end EB_controller1;
