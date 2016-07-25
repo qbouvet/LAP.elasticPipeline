@@ -7,23 +7,35 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-type ADDR_ARRAY is array(integer range <>) of std_logic_vector(4 downto 0);
+package DDunit_types is
+	type ADDR_ARRAY is array(integer range <>) of std_logic_vector(4 downto 0);
+end DDunit_types;
+
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use IEEE.math_real."log2";
+use work.DDunit_types.all;
 
 entity DDU is
-GENERIC (	NUM_INPUT_WR_ADDR : integer );
-port(	read_addr : in std_logic_vector(4 downto 0);
-		wr_addr_array : in ADDR_ARRAY(NUM_INPUT_WR_ADDR downto );
-		res_sel : out std_logic_vector(NUM_INPUT_WR_ADDR));
+GENERIC ( NUM_INPUT_WR_ADDR : integer );
+port(	read_adr : in std_logic_vector(4 downto 0);
+		wr_adr_array : in ADDR_ARRAY(NUM_INPUT_WR_ADDR downto 1);
+		res_sel : out std_logic_vector(integer(log2(real(NUM_INPUT_WR_ADDR))) downto 1));
 end DDU;
 
 architecture DDU1 of DDU is
 
 begin
 
+	process(read_adr, wr_adr_array)
+	begin
 	for i in 1 to NUM_INPUT_WR_ADDR loop
-		if(read_addr = wr_addr_array(i) then
-			res_sel <= to_std_logic_vector(to_unsigned(i));
+		if(read_adr = wr_adr_array(i)) then
+			res_sel <= std_logic_vector(to_unsigned(i,integer(log2(real(NUM_INPUT_WR_ADDR)))));
 		end if;
 	end loop;
+	end process;
 
-end DDU1;
+end DDU1;  
