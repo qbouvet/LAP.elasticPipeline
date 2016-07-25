@@ -10,7 +10,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity sample_op_0 is 
+entity sample_op_1 is 
 port(
 	clk, reset,
 	a, b : in std_logic_vector(31 downto 0);
@@ -20,9 +20,9 @@ port(
 	p_valid, n_ready : in std_logic;
 	ready, valid: out std_logic
 );	
-end sample_op_0;
+end sample_op_1;
 
-architecture pipelined of sample_op_0 is
+architecture pipelined of sample_op_1 is
 	signal res : array (1 to 4) of std_logic_vector(31 downto 0);
 	signal valid_in : array(1 to 2) of std_logic;
 	signal ready_in : array(1 to 2) of std_logic;
@@ -60,19 +60,26 @@ port(	clk, reset,
 		ready, valid: out std_logic
 );
 
-architecture pipelined of addBuffered is
+architecture pipelined of addTriBuffered is
 	addi_res : std_logic_vector(31 downto 0);
 	carry_res : std_logic;
-	buffer_out : std_logic_vector(32 downto 0);
+	buffer_out : array (2 downto 0) of std_logic_vector(32 downto 0);
+	
+	--control signals
+	buffer_valid, buffer_ready : array(1 dowto 0) of std_logic;
 begin	
 	
 	addi : entity work.adder 
 			port map(a, b, addi_res, carry_res);
-	resBuffer : entity work.elasticBuffer_reg generic map(33)
-			port map(clk, reset, carry_res&addi_res, buffer_out, p_valid, n_ready, ready, valid);
+	resBuffer0 : entity work.elasticBuffer_reg generic map(33)
+			port map(clk, reset, carry_res&addi_res, buffer_out(0), p_valid, buffer_ready(0), ready, buffer_valid(0));
+	resBuffer1 : entity work.elasticBuffer_reg generic map(33)
+			port map(clk, reset, buffer_out(0), buffer_out(1), buffer_valid(0), buffer_ready(1), buffer_ready(0), buffer_valid(1));
+	resBuffer2 : entity work.elasticBuffer_reg generic map(33)
+			port map(clk, reset, buffer_out(1), buffer_out(2), buffer_valid(1), n_ready, buffer_ready(1), valid);
 	
-	output <= buffer_output(31 downto 0);
-	carry <= buffer_output(32);
+	output <= buffer_out(2)(31 downto 0);
+	carry <= buffer_out(2)(32);
 end pipelined;
 
 
