@@ -22,9 +22,9 @@ port(	clk, reset : in std_logic;
 		-- all the delayed outputs
 		data_out : out vectorArray_t(0 to DELAY)(DATA_SIZE-1 DOWNTO 0); -- we want data_out(0) to select the signal with 0 delay
 		--elastic control signals
+		valid : out bitArray_t(0 to DELAY); -- same as data_out
 		p_valid, n_ready : in std_logic;
-		ready : out std_logic;
-		valid : out bitArray_t(0 to DELAY) -- same as data_out
+		ready : out std_logic
 ); 
 end delayChannel;
 

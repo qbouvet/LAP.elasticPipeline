@@ -1,9 +1,10 @@
---------------------------------------------  eagerFork_RegisterBLock
----------------------------------------------------------------------
+-----------------------------------------------  eagerFork_RegisterBLock
+------------------------------------------------------------------------
 -- this block contains the register and the combinatorial logic 
 -- around it, as in the design in cortadella elastis systems (paper 2)
 -- page 3
 -- a simple 2 way eager for uses 2 of those blocks
+------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -42,12 +43,13 @@ end eagerFork_RegisterBLock1;
 
 
 
----------------------------------------------------------------  fork
----------------------------------------------------------------------
+------------------------------------------------------------------  Fork
+------------------------------------------------------------------------
 -- forks signals from one register controller to two other register
 -- controllers
 -- contains both implementations from "Cortadella elastic systems", 
 -- paper 2, p3
+------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -59,7 +61,9 @@ port(	clk, reset,		-- the eager implementation uses registers
 end fork;
 
 
-
+------------------------------------------------------------------------
+-- lazy implementation
+------------------------------------------------------------------------
 architecture lazy of fork is
 begin
 
@@ -72,6 +76,9 @@ end lazy;
 
 
 
+------------------------------------------------------------------------
+-- eager implementation (not functionnal)
+------------------------------------------------------------------------
 architecture eager of fork is
 	signal fork_stop, block_stop0, block_stop1, n_stop0, n_stop1, pValidAndForkStop : std_logic;
 begin

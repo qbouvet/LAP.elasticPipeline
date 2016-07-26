@@ -1,74 +1,15 @@
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-
-entity elasticBuffer_reg is
-GENERIC(
-	VECT_SIZE : integer);
-port(
-	clk, reset : in std_logic;
-	
-	d_in : in std_logic_vector(VECT_SIZE-1 downto 0);
-	d_out : out std_logic_vector(VECT_SIZE-1 downto 0);
-	
-	p_valid, n_ready : in std_logic;
-	ready, valid : out std_logic);
-end elasticBuffer_reg;
-
--- implementation (b) (2 flip flop connected sequentially with a multiplexer in between)
-architecture elasticBuffer_reg1 of elasticBuffer_reg is
-	
-	signal aux_wren : std_logic;
-	signal main_wren : std_logic;
-	signal mux_sel : std_logic; --selects the auxiliary register at '1', the data input at '0'	
-	signal mainRegData : std_logic_vector(VECT_SIZE-1 downto 0);
-	signal auxRegData : std_logic_vector(VECT_SIZE-1 downto 0);
-	
-begin
-
-	controller : entity work.EB_controller(EB_controller1) port map (
-		reset, clk, n_ready, p_valid, ready, valid, aux_wren, main_wren, mux_sel
-	);
-	
-	-- auxiliairy register
-	process(aux_wren, clk, d_in, main_wren)
-	begin
-		if(reset='1')then
-			auxRegData <= (others => '0');
-		else 
-			if(rising_edge(clk)) then
-				if(aux_wren='1') then
-					auxRegData <= d_in;
-				end if;
-			end if;
-		end if;
-	end process;
-	
-	-- main register + multiplexer
-	process(main_wren, clk, d_in)
-	begin
-		if(reset='1')then
-			mainRegData <= (others => '0');
-		else 
-			if(rising_edge(clk)) then
-				if(main_wren='1') then
-					if(mux_sel = '1') then
-						mainRegData <= auxRegData;
-					else 
-						mainRegData <= d_in;
-					end if;
-				end if;
-			end if;
-		end if;
-	end process;
-	
-	d_out <= mainRegData;
-	
-end elasticBuffer_reg1;
+-----------------------------------------------------  elasticBuffer
+---------------------------------------------------------------------
+-- the "2register-1multiplexer" implementation from cortadella's 
+-- papers
+---------------------------------------------------------------------
 
 
 
---------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+-- controller for the elastic buffer
+------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -159,3 +100,77 @@ begin
 		end if;
 	end process;
 end EB_controller1;
+
+
+
+
+
+------------------------------------------------------------------------ 
+-- elastic buffer itself
+------------------------------------------------------------------------ 
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity elasticBuffer_reg is
+GENERIC(
+	VECT_SIZE : integer);
+port(
+	clk, reset : in std_logic;
+	
+	d_in : in std_logic_vector(VECT_SIZE-1 downto 0);
+	d_out : out std_logic_vector(VECT_SIZE-1 downto 0);
+	
+	p_valid, n_ready : in std_logic;
+	ready, valid : out std_logic);
+end elasticBuffer_reg;
+
+architecture elasticBuffer_reg1 of elasticBuffer_reg is
+	
+	signal aux_wren : std_logic;
+	signal main_wren : std_logic;
+	signal mux_sel : std_logic; --selects the auxiliary register at '1', the data input at '0'	
+	signal mainRegData : std_logic_vector(VECT_SIZE-1 downto 0);
+	signal auxRegData : std_logic_vector(VECT_SIZE-1 downto 0);
+	
+begin
+
+	controller : entity work.EB_controller(EB_controller1) port map (
+		reset, clk, n_ready, p_valid, ready, valid, aux_wren, main_wren, mux_sel
+	);
+	
+	-- auxiliairy register
+	process(aux_wren, clk, d_in, main_wren)
+	begin
+		if(reset='1')then
+			auxRegData <= (others => '0');
+		else 
+			if(rising_edge(clk)) then
+				if(aux_wren='1') then
+					auxRegData <= d_in;
+				end if;
+			end if;
+		end if;
+	end process;
+	
+	-- main register + multiplexer
+	process(main_wren, clk, d_in)
+	begin
+		if(reset='1')then
+			mainRegData <= (others => '0');
+		else 
+			if(rising_edge(clk)) then
+				if(main_wren='1') then
+					if(mux_sel = '1') then
+						mainRegData <= auxRegData;
+					else 
+						mainRegData <= d_in;
+					end if;
+				end if;
+			end if;
+		end if;
+	end process;
+	
+	d_out <= mainRegData;
+	
+end elasticBuffer_reg1;

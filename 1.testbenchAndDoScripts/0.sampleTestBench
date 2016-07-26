@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_textio.all;
 use std.textio.all;
+use work.customTypes.all;
 
 entity xxx is 
 end xxx;
@@ -18,14 +19,38 @@ begin
 	
 	-- run simulation
 	sim : process
+		--simulation reset
 		procedure resetSim is
 			begin
 				reset <= '1';
 				wait until rising_edge(clk);
-				wait for(3 * CLK_PERIOD / 4);
+				wait for(CLK_PERIOD / 4);
 				reset<='0';
-		end procedure resetSim;
+		end procedure resetSim;			
+		--waiting procedures
+		procedure waitPeriod(constant i : in real) is
+		begin
+			wait for i * CLK_PERIOD;
+		end procedure;		
+		procedure waitPeriod(constant i : in integer) is
+		begin
+			wait for i * CLK_PERIOD;
+		end procedure;	
+		--text output procedures
+		variable console_out : line;
+		procedure newline is
+		begin
+			console_out := new string'("");
+			writeline(output, console_out);
+		end procedure newline;
+		procedure print(msg : in string) is
+		begin
+			console_out := new string'(msg);
+			writeline(output, console_out);
+		end procedure print;
+		-- finished procedures
 	begin
+	resetSim;
 	if(not finished)then 
 	
 	end if;
