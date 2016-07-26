@@ -1,3 +1,47 @@
+--------------------------------------------  eagerFork_RegisterBLock
+---------------------------------------------------------------------
+-- this block contains the register and the combinatorial logic 
+-- around it, as in the design in cortadella elastis systems (paper 2)
+-- page 3
+-- a simple 2 way eager for uses 2 of those blocks
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity eagerFork_RegisterBLock is
+port(	clk, reset, 
+		p_valid, n_stop, 
+		p_valid_and_fork_stop : in std_logic;
+		valid, 	block_stop : out std_logic);
+end eagerFork_RegisterBLock;
+
+architecture eagerFork_RegisterBLock1 of eagerFork_RegisterBLock is
+	signal reg_value, reg_in, block_stop_internal : std_logic;
+begin
+	
+	block_stop_internal <= n_stop and reg_value;
+	
+	block_stop <= block_stop_internal;
+	
+	reg_in <= block_stop_internal or (not p_valid_and_fork_stop);
+	
+	valid <= reg_value and p_valid; 
+	
+	reg : process(clk, reset)
+	begin
+		if(reset='1') then
+			reg_value <= '1'; --contains a "stop" signal - must be 1 at reset
+		else
+			if(rising_edge(clk))then
+				reg_value <= reg_in;
+			end if;
+		end if;
+	end process reg;
+	
+end eagerFork_RegisterBLock1;
+
+
+
+
 ---------------------------------------------------------------  fork
 ---------------------------------------------------------------------
 -- forks signals from one register controller to two other register
@@ -47,80 +91,3 @@ begin
 	ready <= not fork_stop;
 	
 end eager;
-
-
-
-
---------------------------------------------  eagerFork_RegisterBLock
----------------------------------------------------------------------
--- this block contains the register and the combinatorial logic 
--- around it, as in the design in cortadella elastis systems (paper 2)
--- page 3
--- a simple 2 way eager for uses 2 of those blocks
-library ieee;
-use ieee.std_logic_1164.all;
-
-entity eagerFork_RegisterBLock is
-port(	clk, reset, 
-		p_valid, n_stop, 
-		p_valid_and_fork_stop : in std_logic;
-		valid, 	block_stop : out std_logic);
-end eagerFork_RegisterBLock;
-
-architecture eagerFork_RegisterBLock1 of eagerFork_RegisterBLock is
-	signal reg_value, reg_in, block_stop_internal : std_logic;
-begin
-	
-	block_stop_internal <= n_stop and reg_value;
-	
-	block_stop <= block_stop_internal;
-	
-	reg_in <= block_stop_internal or (not p_valid_and_fork_stop);
-	
-	valid <= reg_value and p_valid; 
-	
-	reg : process(clk, reset)
-	begin
-		if(reset='1') then
-			reg_value <= '1'; --contains a "stop" signal - must be 1 at reset
-		else
-			if(rising_edge(clk))then
-				reg_value <= reg_in;
-			end if;
-		end if;
-	end process reg;
-	
-end eagerFork_RegisterBLock1;
-
-
-
----------------------------------------------------------  forkBlock3
----------------------------------------------------------------------
--- rassembles 2 simple forks into a 3 way fork.
--- used in other components
-library ieee;
-use ieee.std_logic_1164.all;
-
-entity forkBlock3 is
-port(	clk, reset, 
-		p_valid, n_ready0, n_ready1, n_ready2 : in std_logic;
-		valid0, valid1, valid2, ready : out std_logic;
-);
-
-architecture lazy of forkBlock3 is
-
-	signal f0_ready1, f0_valid1 : std_logic;
-			
-	
-begin
-	fork0 : entity work.fork(lazy) --the first fork outputs to the output and to the other fork
-		port map(clk, reset, p_valid, n_ready0, f0_ready1, ready, valid0, f0_valid1);
-	fork1 : entity work.fork(lazy) 
-		port map(clk, reset, f0_valid1, n_ready1, n_ready2, f0_ready1, valid1, valid2);
-end lazy;
-
-
-port(	clk, reset,		-- the eager implementation uses registers
-		p_valid,
-		n_ready0, n_ready1 : in std_logic;
-		ready, valid0, valid1 : out std_logic);
