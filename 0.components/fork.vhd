@@ -58,7 +58,8 @@ entity fork is
 port(	clk, reset,		-- the eager implementation uses registers
 		p_valid,
 		n_ready0, n_ready1 : in std_logic;
-		ready, valid0, valid1 : out std_logic);
+		ready, 
+		valid0, valid1 : out std_logic);
 end fork;
 
 ------------------------------------------------------------------------
