@@ -70,11 +70,10 @@ port(
 	pValidArray : in bitArray_t(1 downto 0);
 	nReady : in std_logic;
 	readyArray : out bitArray_t(1 downto 0);
-	valid : out std_logic;
-	);
+	valid : out std_logic);
 end op0;
 
-architecture s1 of sample_op_0 is
+architecture forwarding of op0 is
 begin
 
 	joinArgs : entity work.join 
@@ -83,7 +82,7 @@ begin
 	addArgs : entity work.adder 
 			port map (a, b, res, open); --leave the carry open
 
-end s1;
+end forwarding;
 
 
 ------------------------------------------------------------------------
@@ -102,14 +101,19 @@ port(
 	pValidArray : in bitArray_t(1 downto 0);
 	nReady : in std_logic;
 	readyArray : out bitArray_t(1 downto 0);
-	valid : out std_logic;
-	);
+	valid : out std_logic);
 end op1;
 
-architecture vanilla of op1 is
+architecture forwarding of op1 is
+	signal tempRes : std_logic_vector(31 downto 0);
 begin
-	joinArgs : entity work.join3
+
+	joinArgs : entity work.join -- we don't need a join3 since we use 2 times the same argument
 			port map(pValidArray(0), pValidArray(1), nReady, valid, readyArray(0), readyArray(1));
 			
+	addArgs : entity work.adder 
+			port map(a, b, tempRes, open);
+	multArgs : entity work.multiplier	
+			port map(a, tempRes, res, open);
 	
-end vanilla;
+end forwarding;
