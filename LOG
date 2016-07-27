@@ -4,7 +4,6 @@ TODO
 	do a version of the ciruit with elastic components (simple version, no buffers everywhere)
 			debug OPunit
 			(test new register file)    (test join3)    (test new OP unit)    (test genericFork[5])  (test IFD)
-			re-implement circuit 
 	
 	do a version of the circuit with elasticBuffers (complex version)
 			pipeline OP unit - test OP unit 
