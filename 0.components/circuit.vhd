@@ -12,7 +12,7 @@ entity circuit is port(
 	IFDready : out std_logic;
 	dataValid : in std_logic;
 	data : in std_logic_vector(31 downto 0);
-	instr_out, res_out : out std_logic_vector(31 downto 0); -- to allow us to look what's going on inside during tests
+	instr_out, res_out : out std_logic_vector(31 downto 0)); -- to allow us to look what's going on inside during tests
 end circuit;
 
 
@@ -41,7 +41,7 @@ architecture elasticBasic of circuit is
 	
 begin
 
-	instructionFetchedDecoder : entity work.IFD 
+	instructionFetchedDecoder : entity work.instructionFetcherDecoder(vanilla) 
 			port map(	clk, reset, 
 						data, 						-- instr_in
 						adrB, adrA, adrW, argI, oc, 
@@ -50,7 +50,7 @@ begin
 						IFDready, 					-- ready
 						IFDvalidArray);				-- ValidArray
 	
-	regFile : entity work.registerFile 
+	regFile : entity work.registerFile(registersMultiplexer)
 			port map(	clk, reset, 
 						adrB, adrA, adrW, opResult, 
 						(IFDvalidArray(4 downto 2), OPU_resValid), 	-- pValidArray
@@ -60,7 +60,7 @@ begin
 						RFvalidArray);								-- validArray
 	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;
 	
-	OPU : entity work.OPunit
+	OPU : entity work.OPunit(elastic)
 			port map(	clk, reset,
 						operandeB, operandeA, argI, oc, 
 						opResult, 
