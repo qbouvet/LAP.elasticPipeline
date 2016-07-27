@@ -112,26 +112,26 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity elasticBuffer_reg is
+entity elasticBuffer is
 GENERIC(
-	VECT_SIZE : integer);
+	DATA_SIZE : integer);
 port(
 	clk, reset : in std_logic;
 	
-	d_in : in std_logic_vector(VECT_SIZE-1 downto 0);
-	d_out : out std_logic_vector(VECT_SIZE-1 downto 0);
+	d_in : in std_logic_vector(DATA_SIZE-1 downto 0);
+	d_out : out std_logic_vector(DATA_SIZE-1 downto 0);
 	
 	p_valid, n_ready : in std_logic;
 	ready, valid : out std_logic);
-end elasticBuffer_reg;
+end elasticBuffer;
 
-architecture elasticBuffer_reg1 of elasticBuffer_reg is
+architecture vanilla of elasticBuffer is
 	
 	signal aux_wren : std_logic;
 	signal main_wren : std_logic;
 	signal mux_sel : std_logic; --selects the auxiliary register at '1', the data input at '0'	
-	signal mainRegData : std_logic_vector(VECT_SIZE-1 downto 0);
-	signal auxRegData : std_logic_vector(VECT_SIZE-1 downto 0);
+	signal mainRegData : std_logic_vector(DATA_SIZE-1 downto 0);
+	signal auxRegData : std_logic_vector(DATA_SIZE-1 downto 0);
 	
 begin
 
@@ -173,4 +173,4 @@ begin
 	
 	d_out <= mainRegData;
 	
-end elasticBuffer_reg1;
+end vanilla;

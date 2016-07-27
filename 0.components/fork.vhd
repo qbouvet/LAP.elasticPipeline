@@ -43,6 +43,7 @@ end eagerFork_RegisterBLock1;
 
 
 
+
 ------------------------------------------------------------------  Fork
 ------------------------------------------------------------------------
 -- forks signals from one register controller to two other register
@@ -60,7 +61,6 @@ port(	clk, reset,		-- the eager implementation uses registers
 		ready, valid0, valid1 : out std_logic);
 end fork;
 
-
 ------------------------------------------------------------------------
 -- lazy implementation
 ------------------------------------------------------------------------
@@ -74,8 +74,6 @@ begin
 	
 end lazy;
 
-
-
 ------------------------------------------------------------------------
 -- eager implementation (not functionnal)
 ------------------------------------------------------------------------
@@ -88,13 +86,94 @@ begin
 	n_stop1 <= not n_ready1;
 	fork_stop <= block_stop0 or block_stop1;
 	pValidAndForkStop <=  p_valid and fork_stop;
+					
+	ready <= not fork_stop;
 
 	regBlock0 : entity work.eagerFork_RegisterBLock 
 					port map(clk, reset, p_valid, n_stop0, pValidAndForkStop, valid0, block_stop0);
 
 	regBlock1 : entity work.eagerFork_RegisterBLock 
 					port map(clk, reset, p_valid, n_stop0, pValidAndForkStop, valid1, block_stop1);
-					
-	ready <= not fork_stop;
 	
 end eager;
+
+
+
+
+
+-----------------------------------------------------------------  andN
+------------------------------------------------------------------------
+-- size-generic AND gate used in the size-generic lazy fork
+------------------------------------------------------------------------
+LIBRARY IEEE;
+USE ieee.std_logic_1164.all;
+use work.customTypes.all;
+
+ENTITY andN IS
+GENERIC (n : INTEGER := 4);
+PORT (	x : IN bitArray_t(N-1 downto 0);
+		res : OUT STD_LOGIC);
+END andN;
+
+ARCHITECTURE vanilla OF andn IS
+	SIGNAL tmp : bitArray_t(n-1 downto 0);
+BEGIN
+	tmp <= (OTHERS => '1');
+	res <= '1' WHEN x = tmp ELSE '0';
+END vanilla;
+
+
+
+
+
+-----------------------------------------------------------------  ForkN
+------------------------------------------------------------------------
+-- size-generic fork bloc, made with the same logic as fork2
+------------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use work.customTypes.all;
+
+entity forkN is
+generic( SIZE : integer);
+port(	clk, reset,		-- the eager implementation uses registers
+		pValid : in std_logic;
+		nReadyArray : in bitArray_t(SIZE-1 downto 0);
+		validArray : out bitArray_t(SIZE-1 downto 0);
+		ready : out std_logic);
+end forkN;
+
+------------------------------------------------------------------------
+-- lazy implementation
+------------------------------------------------------------------------
+architecture lazy of forkN is
+	signal allPReady : std_logic;
+begin
+
+	genericAnd : entity work.andn generic map (SIZE)
+			port map(nReadyArray, allPReady);
+	
+	valids : process(pValid, nReadyArray, allPReady)
+	begin	
+		for i in 0 to SIZE-1 loop
+			validArray(i) <= pValid and allPReady;
+		end loop;
+	end process;
+	
+	ready <= allPReady;
+	
+end lazy;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
