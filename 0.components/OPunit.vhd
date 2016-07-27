@@ -50,32 +50,33 @@ end vanilla;
 
 ---------------------------------------------------------------- OP unit
 ------------------------------------------------------------------------
--- groups together the various operations we want and the selector block
+-- groups together the various operations we want + the selector block
 ------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.customTypes.all;
 
-entity OP_unit is
+entity OPunit is
 	port(
 		clk, reset : in std_logic;
-		argA, argB : in std_logic_vector (31 downto 0);
-		instr, oc : in std_logic_vector(31 downto 0); -- instr for the immediate arguemnt
+		argB, argA, argI, oc : in std_logic_vector (31 downto 0); -- operande, immediate argument and opcode
 		res : out std_logic_vector (31 downto 0);
 		
-		--control signals for argB, argA, instr, oc
+		--control signals for argB, argA, argI, oc
 		pValidArray : in bitArray_t(3 downto 0);
 		nReady : in std_logic;
 		valid : out std_logic;
 		readyArray : out bitArray_t(3 downto 0));
-end OP_unit;
+end OPunit;
 
 ------------------------------------------------------------------------
 -- version with simple elastic control signals implementation
 ------------------------------------------------------------------------
-architecture elastic of OP_unit is
-	signal argImm, res0, res1 : std_logic_vector (31 downto 0);
+architecture elastic of OPunit is
+	-- results
+	signal res0, res1 : std_logic_vector (31 downto 0);
+	--fork control signals
 	signal forkA_nReady, forkA_valid : bitArray_t(1 downto 0);
 	signal forkA_ready : std_logic;
 	signal op0_valid, op1_valid : std_logic;
@@ -86,27 +87,40 @@ architecture elastic of OP_unit is
 	signal selector_ready_array : bitArray_t(2 downto 0);	
 begin
 	
-	-- extract immediate argument from instruction
-	argImm <= X"0000" & instr(21 downto 6);
-	
 	-- fork for argument A
 	forkA : entity work.fork
-			port map (clk, reset, pValidArray(2), forkA_nReady(0), forkA_nReady(1), readyArray(2), forkA_valid(0), forkA_valid(1));
+			port map (	clk, reset, 
+						pValidArray(2), 					-- p_valid
+						forkA_nReady(0), forkA_nReady(1), 	-- nReadyArray
+						readyArray(2), 						-- ready
+						forkA_valid(0), forkA_valid(1));	-- validArray
 	
 	addi : entity work.op0
-			--port map (argA, argB, res0, forkA_valid(0) & pValidArray(1), selector_opReady(0), (forkA_nReady(0), readyArray(1)), op0_valid);
-			port map (argA, argB, res0, forkA_valid(0) & pValidArray(1), selector_opReady(0), addi_ready_array, op0_valid);
-			(forkA_nReady(0), readyArray(1)) <= addi_ready_array;
+			port map (	argA, argI, 
+						res0, 
+						forkA_valid(0) & pValidArray(1), 	-- pValidArray
+						selector_opReady(0), 				-- nReady
+						addi_ready_array, 					-- readyArray
+						op0_valid);							-- valid
+	(forkA_nReady(0), readyArray(1)) <= addi_ready_array;
 			
 	sampleOp1 : entity work.op1
-			--port map (argA, argB, res1, forkA_valid(1) & pValidArray(3), selector_opReady(1), (forkA_nReady(1), readyArray(3)), op1_valid);
-			port map (argA, argB, res1, forkA_valid(1) & pValidArray(3), selector_opReady(1), op1_ready_array, op1_valid);
-			(forkA_nReady(1), readyArray(3)) <= op1_ready_array;
+			port map (	argA, argB, 
+						res1, 
+						forkA_valid(1) & pValidArray(3), 	-- p_valid_array
+						selector_opReady(1), 				-- n_ready
+						op1_ready_array, 					-- readyArray
+						op1_valid);							-- valid
+	(forkA_nReady(1), readyArray(3)) <= op1_ready_array;
 	
 	--prends dans l'ordre les control signals de : (2)res1, (1)res0, (0)oc				
 	selector : entity work.selectorBlock
-			--port map (res1, res0, oc, res, op1_valid & op0_valid & pValidArray(0), nReady, (selector_opReady, readyArray(0)), valid);
-			port map (res1, res0, oc, res, op1_valid & op0_valid & pValidArray(0), nReady, selector_ready_array, valid);
-			(selector_opReady, readyArray(0)) <= selector_ready_array;
+			port map (	res1, res0, oc, 
+						res, 
+						op1_valid & op0_valid & pValidArray(0),	-- pValidArray
+						nReady, 								-- nReady
+						selector_ready_array, 					-- readyArray
+						valid);									-- valid
+	(selector_opReady, readyArray(0)) <= selector_ready_array;
 	
 end elastic;

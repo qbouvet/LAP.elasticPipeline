@@ -10,7 +10,7 @@ package customTypes is
 	-- array of vectors used especially with delay channels
 	type vectorArray_t is array (integer range <>) of std_logic_vector; -- data size and latency must be specified when used
 
-	-- array of bits useed mostly for grouping elastic control signals. used in many components
+	-- array of bits useed mostly for grouping elastic control signals. used in many components. Almost an alias for std_logic_vector
 	type bitArray_t is array (integer range <>) of std_logic;
 
 	-- the address array used as input to the dependancy detection unit

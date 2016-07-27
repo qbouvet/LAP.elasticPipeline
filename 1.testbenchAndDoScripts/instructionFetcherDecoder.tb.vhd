@@ -59,7 +59,7 @@ begin
 	
 	--provide the data
 	data_prvd : process
-		file instr_f : text is in "TB.IFD.instruction.txt";
+		file instr_f : text is in "instructionFetcherDecoder.instruction.txt";
 		variable line_in : line;
 		variable WORD : std_logic_vector(31 downto 0);
 	-- text output procedures

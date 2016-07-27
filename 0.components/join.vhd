@@ -50,11 +50,11 @@ begin
 
 	valid <= pValidArray(0) and pValidArray(1) and pValidArray(2);
 	
-	allPValid <= (pValidArray(0) and pValidArray(1) and (pValidArray2));
+	allPValid <= (pValidArray(0) and pValidArray(1) and pValidArray(2));
 	
-	readyArray(0) <= (not pValidArray(0)) or allPValid
-	readyArray(1) <= (not pValidArray(1)) or allPValid
-	readyArray(2) <= (not pValidArray(2)) or allPValid
+	readyArray(0) <= (not pValidArray(0)) or allPValid;
+	readyArray(1) <= (not pValidArray(1)) or allPValid;
+	readyArray(2) <= (not pValidArray(2)) or allPValid;
 	
 	
 end lazy;

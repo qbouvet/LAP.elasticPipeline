@@ -1,3 +1,119 @@
+-------------------------------------------------------------------  IFD
+-- receives the instruction as input, creates all necessary 
+-- combinatorial signals from the instruction, and send it to the 
+-- circuit.
+-- uses elastic control signals.
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use work.customTypes.all;
+
+entity IFD is
+port(
+	clk, reset : in std_logic;
+	instr_in : in std_logic_vector(31 downto 0);
+	
+	adrB, adrA, adrW, argI, oc : out std_logic_vector(31 downto 0);
+	
+	-- elastic control signals
+	pValid : in std_logic;
+	nReadyArray : in bitArray_t(4 downto 0); -- in order : (4)adrB, adrA, adrW, argI, oc(0)
+	ready : out std_logic;
+	validArray : out bitArray_t(4 downto 0) -- same order 
+	
+	currentInstruction : out std_logic_vector; -- to allow us to look what's going on inside during tests (cf circuit.vhd)
+); end IFD;
+
+architecture vanilla of IFD is
+	signal instr : std_logic_vector(31 downto 0);
+	signal forkReady, instrReg_valid : std_logic;
+begin
+
+	-- all outputs are combinatorial - this + elastic control signals replace the controller
+	oc <= X"00000" & instr_in(16 downto 11) & instr_in(5 downto 0);
+	argI <= X"0000" & instr_in(21 downto 6);
+	adrW <= X"000000" & "000" & instr_in(31 downto 27);
+	adrA <= X"000000" & "000" & instr_in(26 downto 22);
+	adrB <= X"000000" & "000" & instr_in(21 downto 17);	
+	
+	-- an elastic buffer has the role of instruction register (holds the current instruction)
+	instructionRegister : entity work.elasticBuffer generic map (32)
+			port map(clk, reset, instr_in, instr, pValid, forkReady, ready, instrReg_valid);
+	
+	-- a fork5 maps the instruction register's control signal to all the data outputs made from the isntruction
+	forkToOutputs : entity work.forkN generic map (5)
+			port map(clk, reset, instrReg_valid, nReadyArray, validArray, forkReady);
+	
+	currentInstruction <= instr;
+	
+end vanilla;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- replaced by an elastic buffer
+---------------------------------------------------  Instruction Register
+library ieee;
+use ieee.std_logic_1164.all;
+use work.customTypes.all;
+
+entity IR is
+port(
+	reset : in std_logic;
+	clk : in std_logic;
+	enable : in std_logic;
+	d_in : in std_logic_vector(31 downto 0);
+	d_out : out std_logic_vector(31 downto 0)
+);
+end IR;
+
+architecture IR1 of IR is
+begin
+	process(clk)
+	begin
+	if(reset='1')then 
+		d_out <= (others => '0');
+	else 
+		if(rising_edge(clk)) then
+			if(enable='1') then
+				d_out <= d_in;
+			end if;
+		end if;
+	end if;
+	end process;
+end IR1;
+
+
+-- not used : the instructions are exectued sequentially
 ---------------------------------------------------  Program Counter
 library ieee;
 use ieee.std_logic_1164.all;
@@ -32,42 +148,7 @@ begin
 end PC1;
 
 
-
-
----------------------------------------------------  Instruction Register
-library ieee;
-use ieee.std_logic_1164.all;
-use work.customTypes.all;
-
-entity IR is
-port(
-	reset : in std_logic;
-	clk : in std_logic;
-	enable : in std_logic;
-	d_in : in std_logic_vector(31 downto 0);
-	d_out : out std_logic_vector(31 downto 0)
-);
-end IR;
-
-architecture IR1 of IR is
-begin
-	process(clk)
-	begin
-	if(reset='1')then 
-		d_out <= (others => '0');
-	else 
-		if(rising_edge(clk)) then
-			if(enable='1') then
-				d_out <= d_in;
-			end if;
-		end if;
-	end if;
-	end process;
-end IR1;
-
-
-
-
+-- no longer used
 ------------------------------------------------------------------------  Controller
 library ieee;
 use ieee.std_logic_1164.all;
@@ -132,72 +213,3 @@ begin
 		end if;
 	end process;
 end controller1;
-
-
-
-
-------------------------------------------------------------------------   IFD
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-use work.customTypes.all;
-
-entity IFD is
-port(
-	reset, clk : in std_logic;
-	
-	rddata : in std_logic_vector(31 downto 0);
-	rd_addr : out std_logic_vector(31 downto 0);
-	
-	readNextInstr : out std_logic;
-	instr_delayed : out vectorArray_t(3 downto 0)(31 downto 0);
-	instr_valid : out bitArray_t(3 downto 0);
-	
-	rf_wren : out std_logic;
-	adrA, adrB, wr_adr : out std_logic_vector(31 downto 0);
-	
-	oc_delayed : out vectorArray_t(3 downto 0)(31 downto 0);
-	oc_valid : out bitArray_t(3 downto 0);
-	
-	-- elastic control signals necessary for the delayChannel
-	n_ready : in std_logic;
-	valid : out std_logic);
-	
-end IFD;
-
-architecture IFD1 of IFD is
-	
-	signal pc_en, ir_wren : std_logic;
-	signal instr_in : std_logic_vector(31 downto 0);
-	signal instrRegister_out : std_logic_vector(31 downto 0);
-	signal oc : std_logic_vector(31 downto 0);
-	
-begin	
-	oc <= "00000000000000000000" & instr_in(16 downto 11) & instr_in(5 downto 0);
-	wr_adr <= "000000000000000000000000000" & instr_in(31 downto 27);
-	adrA <= "000000000000000000000000000" & instr_in(26 downto 22);
-	adrB <= "000000000000000000000000000" & instr_in(21 downto 17);	
-	
-	ctrlr1 : entity work.controller 
-			port map(reset, clk, instr_in, open, readNextInstr, rf_wren, pc_en, ir_wren);
-	PC1 : entity work.PC 
-			port map (reset, clk, pc_en, rd_addr);
-	IR1 : entity work.IR 
-			port map (reset, clk, ir_wren, rddata, instrRegister_out);
-		
-		
-	-- delay channel for instructions
-	instrDelayChannel : entity work.delayChannel(generique) generic map(32, 3)
-			port map(clk, reset, instrRegister_out, instr_delayed, instr_valid, "1", "1", open); -- we fetch new instructions at each cycle ?
-			
-	-- delay channel for OPcode
-	ocDelayChannel : entity work.delayChannel(generique) generic map(32, 3)
-			port map(clk, reset, oc, oc_delayed, oc_valid, "1", "1". open); -- idem
-	
-	-- control signals processes
-	readNextInstruction <= n_ready;
-	valid <= n_ready;			-- in our simulation, the instruction reads are instanteneous. We may need to change that at some point
-	
-end IFD1;
-
-
