@@ -14,7 +14,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity EB_controller is
+entity elasticBuffer_controller is
 port(
 	reset : in std_logic;
 	clk : in std_logic;
@@ -27,10 +27,10 @@ port(
 	aux_wren : out std_logic;
 	main_wren : out std_logic;
 	mux_sel : out std_logic	);
-end EB_controller;
+end elasticBuffer_controller;
 
 
-architecture EB_controller1 of EB_controller is
+architecture registersMultiplexer of elasticBuffer_controller is
 
 	type state_t is (EMPTY, HALF, FULL);
 	signal currentState, nextState : state_t;
@@ -99,7 +99,7 @@ begin
 		
 		end if;
 	end process;
-end EB_controller1;
+end registersMultiplexer;
 
 
 
@@ -135,7 +135,7 @@ architecture vanilla of elasticBuffer is
 	
 begin
 
-	controller : entity work.EB_controller(EB_controller1) port map (
+	controller : entity work.elasticBuffer_controller(registersMultiplexer) port map (
 		reset, clk, n_ready, p_valid, ready, valid, aux_wren, main_wren, mux_sel
 	);
 	

@@ -1,8 +1,19 @@
+------------------------------------------------------------------------------------------------------------
 TODO	
 	
-	do dependence detection unit
-	connect stuff altogether -> need dependance detection unit
-	memory bypass		-> need antitokens
+	do a version of the ciruit with elastic components (simple version, no buffers everywhere)
+			debug OPunit
+			(test new register file)    (test join3)    (test new OP unit)    (test genericFork[5])  (test IFD)
+			re-implement circuit 
+	
+	do a version of the circuit with elasticBuffers (complex version)
+			pipeline OP unit - test OP unit 
+			add elastic control signal sto register file
+			change IFD to be combinatorial and double check changes on this one
+	
+	is DD unit ok ?
+	analyse performance
+	memory bypass		-> need antitokens to be useful
 	discuss eager join to find error in the design
 	
 	think/read about antitoken channel issuse	
@@ -12,19 +23,56 @@ TODO
 
 
 
-
+------------------------------------------------------------------------------------------------------------
 NOTES  
+
 	
-	jon : is the (not p_valid) term necessary for the read signal ?
-	what happens if the enable signal stops the shifting, but there's an incomming antitoken (can the situation happen ? case the other )
+	registerFile : can write once per clock -> as long as we use synchronous buffers, as if "always ready" ?
+		
+	delayChannel -> what to do with control signals of the delayed outputs ? don't allow them to stall ?
+				is valid even necessary, since these buffers should pretty much move at every clock cycle ?
+						
+	join : is the (not p_valid) term necessary for the read signal ?
 	
-	is it a good idea to use not clk for the shift register of the antitoken channel ? -> no
+																			----------------------------
+
+	in this circuit, the only benefit we get is from the early evaluation, otherwise, pipeline is never going to stall ?
+		-> in THIS circuit. change the number of buffers on one of the functions, we'll stall but still have the ability 
+			to have swapped the operations and keep a correct circuit	
+	even with the early evaluation, it's never going to stall ? 
+		-> it is. recall that elastic systems are meant to allow functions to be interchangeable. if you have 2 functions of 
+			different length (with different number of buffers), then you'll have to stall at some point. 				
+	quel interet d'utiliser des elastic buffers pour stocker/delayer l'adresse et l'opcode ? cf control signals : always ready
+		-> for when we stall - cf join at the entrance of register file / possible stalling	
+	is the dependency detection unit right ? heavily relies ont the fact that 1 instr/cycle comes from the IFD
+		-> need to thange that	
+	what is the elastic buffer between the write and read steps ?
+		-> reminder that the register file needs to be elastic too	
+	what happens if the enable signal stops the shifting, but there's an incomming antitoken 
+		->  problem 
 		
 
 
-
+------------------------------------------------------------------------------------------------------------
 DONE
 
+	do a version of the ciruit with elastic components (simple version, no buffers everywhere)	
+			----
+			test join, test fork
+			change IFD and add control signals to it
+			do a fork5 for the IFD
+			add control signals to OP unit
+			do a good 3way join (for multiplexers)
+			add control signals to register file
+	
+	*interrupted*  do a version of the circuit with elastic buffers
+			add delay channels for adresse and opcode in IFD
+			quick test delayChannel
+			do delayChannel
+
+			re-implement elasticBuffers with size-genericity
+			implement resolultion unit
+	
 	understand the eager fork
 	implement fork 
 	test join (lazy)
@@ -32,8 +80,6 @@ DONE
 	rework the antitoken channel architecture in regards to when the register stops shifting (based on data transiting instead of purely clock)
 	testbench for the antitoken channel's shift register
 	debugged antitoken channel's shift register
-
-
 
 
 

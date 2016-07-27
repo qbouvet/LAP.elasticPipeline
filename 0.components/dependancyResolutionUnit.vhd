@@ -1,4 +1,4 @@
----------------------------------------------------------  DepResUnit
+-----------------------------------------  Dependance resolution unit
 ---------------------------------------------------------------------
 -- the Dependancy Resolution Unit solves data hasards by selecting 
 -- the correct memory bypass , receiving the read address and all 
@@ -14,15 +14,15 @@ use ieee.numeric_std.all;
 use IEEE.math_real."log2";
 use work.customTypes.all;
 
-entity DepResUnit is
+entity dependancyResolutionUnit is
 GENERIC ( NUM_INPUT_WR_ADDR : integer );
 port(	read_adr : in std_logic_vector(4 downto 0);
 		wr_adr_array : in ADDR_ARRAY(NUM_INPUT_WR_ADDR downto 1);
-		validAdr : in bitsArray_t(NUM_INPUT_WR_ADDR downto 1);															-- TODO
+		validAdr : in bitArray_t(NUM_INPUT_WR_ADDR downto 1);															-- TODO
 		res_sel : out std_logic_vector(integer(log2(real(NUM_INPUT_WR_ADDR))) downto 1));
-end DepResUnit;
+end dependancyResolutionUnit;
 
-architecture DepResUnit1 of DepResUnit is
+architecture vanilla of dependancyResolutionUnit is
 
 begin
 
@@ -35,4 +35,4 @@ begin
 	end loop;
 	end process;
 
-end DepResUnit1;  
+end vanilla;  

@@ -38,15 +38,15 @@ architecture generique of delayChannel is
 begin
 
 	-- instantiate the chain of buffers
-	inputBuffer : entity work.elasticBuffer_reg generic map(DATA_SIZE)
+	inputBuffer : entity work.elasticBuffer(registersMultiplexer)  generic map(DATA_SIZE)
 			port map(clk, reset, data_in, data(DELAY-1), p_valid, buffer_ready(DELAY-1), ready, buffer_valid(DELAY-1));
 	
 	genBuffers : for n in DELAY-1 downto 2 generate
-		intermediateBuffer : entity work.elasticBuffer_reg generic map(DATA_SIZE)
+		intermediateBuffer : entity work.elasticBuffer(registersMultiplexer)  generic map(DATA_SIZE)
 				port map (clk, reset, data(n), data(n-1), buffer_valid(n), buffer_ready(n-1), buffer_ready(n), buffer_valid(n-1));
 	end generate;
 	
-	outputBuffer : entity work.elasticBuffer_reg generic map(DATA_SIZE)
+	outputBuffer : entity work.elasticBuffer(registersMultiplexer) generic map(DATA_SIZE)
 			port map(clk, reset, data(1), data(0), buffer_valid(1), n_ready, buffer_ready(1), buffer_valid(0));
 	
 	

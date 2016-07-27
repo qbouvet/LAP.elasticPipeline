@@ -67,16 +67,19 @@ begin
 	end process sim;
 	
 	-- design under test
-	DUT : entity work.regFile(regFile1) port map (
+	DUT : entity work.registerFile(elastic) port map (
 		clk, reset, adr_a, adr_b, aa, ab, wr_enable, wr_adr, wr_data, '1', '1', '1', '1', open, open, open, open, open);
-	--entity regFile is port(
+	
+	-------- New port
+	--port(
 	--clk, reset : in std_logic;
-	--adr_a, adr_b : in std_logic_vector(31 downto 0);
-	--aa, ab : out std_logic_vector(31 downto 0);
-	--adr_validWr : in std_logic; -- replaces wr_enable : we now write whenever there's valid data incomming 
-	--wr_adr, wr_data : in std_logic_vector(31 downto 0);		
-	--adr_validA, n_readyA, adr_validB, n_readyB : in std_logic;
-	--readyA, validA, readyB, validB, readyWr : out std_logic
+	--adrB, adrA, adrW, wrData : in std_logic_vector(31 downto 0);
+	--pValidArray : in bitArray_t(3 downto 0); 
+	--nReadyArray : in bitArray_t(1 downto 0);
+	
+	--a, b : out std_logic_vector(31 downto 0);	
+	--readyArray : out bitArray_t(3 downto 0);
+	--validArray : out bitArray_t(1 downto 0)	
 	--);
 		
 	-- ticks the clock

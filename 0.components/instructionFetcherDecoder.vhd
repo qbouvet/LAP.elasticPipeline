@@ -8,7 +8,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.customTypes.all;
 
-entity IFD is
+entity instructionFetcherDecoder is
 port(
 	clk, reset : in std_logic;
 	instr_in : in std_logic_vector(31 downto 0);
@@ -19,12 +19,12 @@ port(
 	pValid : in std_logic;
 	nReadyArray : in bitArray_t(4 downto 0); -- in order : (4)adrB, adrA, adrW, argI, oc(0)
 	ready : out std_logic;
-	validArray : out bitArray_t(4 downto 0) -- same order 
+	validArray : out bitArray_t(4 downto 0); -- same order 
 	
-	currentInstruction : out std_logic_vector; -- to allow us to look what's going on inside during tests (cf circuit.vhd)
-); end IFD;
+	currentInstruction : out std_logic_vector -- to allow us to look what's going on inside during tests (cf circuit.vhd)
+); end instructionFetcherDecoder;
 
-architecture vanilla of IFD is
+architecture vanilla of instructionFetcherDecoder is
 	signal instr : std_logic_vector(31 downto 0);
 	signal forkReady, instrReg_valid : std_logic;
 begin
