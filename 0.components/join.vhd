@@ -38,7 +38,7 @@ use work.customTypes.all;
 
 entity join3 is
 port(	pValidArray : in bitArray_t(2 downto 0);
-		n_ready : in std_logic;
+		nReady : in std_logic;
 		valid : out std_logic;
 		readyArray : out bitArray_t(2 downto 0));
 end join3;
@@ -52,9 +52,9 @@ begin
 	
 	allPValid <= (pValidArray(0) and pValidArray(1) and pValidArray(2));
 	
-	readyArray(0) <= (not pValidArray(0)) or allPValid;
-	readyArray(1) <= (not pValidArray(1)) or allPValid;
-	readyArray(2) <= (not pValidArray(2)) or allPValid;
+	readyArray(0) <= (not pValidArray(0)) or (allPValid and nReady);
+	readyArray(1) <= (not pValidArray(1)) or (allPValid and nReady);
+	readyArray(2) <= (not pValidArray(2)) or (allPValid and nReady);
 	
 	
 end lazy;
