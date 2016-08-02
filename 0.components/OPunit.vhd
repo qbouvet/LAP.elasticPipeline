@@ -12,7 +12,7 @@ use work.customTypes.all;
 entity selectorBlock is
 port(	res1, res0, oc : in std_logic_vector(31 downto 0);
 		res : out std_logic_vector(31 downto 0);
-		pValid : in bitArray_t(2 downto 0);
+		pValidArray : in bitArray_t(2 downto 0);
 		nReady : in std_logic;
 		readyArray : out bitArray_t(2 downto 0);
 		valid : out std_logic);
@@ -23,10 +23,10 @@ begin
 
 	-- a join3 handles control signals 
 	joinResAndOc : entity work.join3
-			port map (pValid, nReady, valid, readyArray);
+			port map (pValidArray, nReady, valid, readyArray);
 	
 	-- multiplexer for the data
-	process(res0, res1, oc, pValid, nReady)
+	process(res0, res1, oc, pValidArray, nReady)
 		-- op is oc(5 downto 0) and opx is oc(11 downto 6)
 	begin
 		case oc(5) is 
@@ -77,7 +77,7 @@ architecture elastic of OPunit is
 	-- results
 	signal res0, res1 : std_logic_vector (31 downto 0);
 	--fork control signals
-	signal forkA_nReady, forkA_valid : bitArray_t(1 downto 0);
+	signal forkA_nReadyArray, forkA_validArray : bitArray_t(1 downto 0);
 	signal forkA_ready : std_logic;
 	signal op0_valid, op1_valid : std_logic;
 	-- contient les bits n_ready pour op1, op0; oc is done via the entity's signal
@@ -88,30 +88,30 @@ architecture elastic of OPunit is
 begin
 	
 	-- fork for argument A
-	forkA : entity work.fork
+	forkA : entity work.forkN generic map(2)
 			port map (	clk, reset, 
 						pValidArray(2), 					-- p_valid
-						forkA_nReady(0), forkA_nReady(1), 	-- nReadyArray
-						readyArray(2), 						-- ready
-						forkA_valid(0), forkA_valid(1));	-- validArray
+						forkA_nReadyArray, 					-- nReadyArray
+						forkA_validArray,					-- validArray
+						readyArray(2));						-- ready
 	
 	addi : entity work.op0
 			port map (	argA, argI, 
 						res0, 
-						forkA_valid(0) & pValidArray(1), 	-- pValidArray
+						forkA_validArray(0) & pValidArray(1),--pValidArray
 						selector_opReady(0), 				-- nReady
 						addi_ready_array, 					-- readyArray
 						op0_valid);							-- valid
-	(forkA_nReady(0), readyArray(1)) <= addi_ready_array;
+	(forkA_nReadyArray(0), readyArray(1)) <= addi_ready_array;
 			
 	sampleOp1 : entity work.op1
 			port map (	argA, argB, 
 						res1, 
-						forkA_valid(1) & pValidArray(3), 	-- p_valid_array
+						forkA_validArray(1) & pValidArray(3),--p_valid_array
 						selector_opReady(1), 				-- n_ready
 						op1_ready_array, 					-- readyArray
 						op1_valid);							-- valid
-	(forkA_nReady(1), readyArray(3)) <= op1_ready_array;
+	(forkA_nReadyArray(1), readyArray(3)) <= op1_ready_array;
 	
 	--prends dans l'ordre les control signals de : (2)res1, (1)res0, (0)oc				
 	selector : entity work.selectorBlock
