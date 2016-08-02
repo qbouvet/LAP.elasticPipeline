@@ -14,7 +14,7 @@ architecture testbench of tb_forkEager is
     signal currenttime : time    := 0 ns;	
 	constant CLK_PERIOD : time := 10 ns;
 	
-	signal 	p_valid, n_ready0, n_ready1 : std_logic := '0'; --in
+	signal 	pValid, nReady0, nReady1 : std_logic := '0'; --in
 	signal	ready, valid0, valid1 : std_logic; --out
 	
 begin
@@ -52,36 +52,53 @@ begin
 		if(not finished) then
 			resetSim;	
 
-			p_valid <= '1';
-			n_ready0 <= '1';
-			n_ready1<= '0';
-			waitPeriod(0.1); -- cannot assert directly on signals depending on an immediate assignment
-			assert valid0 = '1' report "there is valid data, we should send it" severity error;
-			assert valid1 = '1' report "there is valid data, we should announce it" severity error;
-			assert ready = '0' report "fork should stop, channel 1 not ready" severity error;
-			waitPeriod(0.9);
-			assert valid0 = '0' report "data has been sent but channel1 is blocking the fork" severity error;
-			assert valid1 = '1' report "there is valid data, we still should announce it" severity error;
-			assert ready = '0' report "fork should stop, channel 1 still not ready" severity error;
-			n_ready1 <= '1';
+			pValid <= '0';
+			nReady0 <= '0';
+			nReady1 <= '0';
 			waitPeriod(1);
-			assert valid0 ='1' report "no channels are blocked, data shoudl flow" severity error;
-			assert valid1 ='1' report "no channels are blocked, data shoudl flow (2)" severity error;
-			assert ready = '1'report "no channels are blocked, data shoudl flow (3)" severity error;
+			assert valid0 = '0' report "(1)";
+			assert valid1 = '0' report "(2)";
+			assert ready = '0' report "(3)";
 			
-			waitPeriod(2);
+			nReady1 <= '1';		-- branch 1 is ready, but there's no valid data yet
+			waitPeriod(1);
+			assert valid0 = '0' report "(4)";
+			assert valid1 = '0' report "(5)"; -- pValid still = 0
 			
-		
+			pValid <= '1';		-- now there's valid data
+			waitPeriod(0.5);
+			assert valid0 = '1' report "(6)"; -- both branches should announce the valid data
+			assert valid1 = '1' report "(7)";
+			waitPeriod(0.5);
+			assert valid1 = '0' report "(7.5)"; -- after rising edge, branch 1 got the data, so there's no more valid data for this branch
+			
+			waitPeriod(1);
+			assert valid1 = '0' report "(8)"; -- still only the old data
+			
+			nReady0 <= '1';
+			assert valid0 = '1' report "(9)"; -- the data was announced for a while on this branch
+			waitPeriod(0.5); --because ready depends directly on nReady0
+			assert ready <= '1' report "(10)"; -- at rising edge, all branches will have been served, so the fork can ask for the next piece of data
+			waitPeriod(0.5);
+			
+			pValid <= '0'; -- there's no more valid data
+			waitPeriod(0.5);
+			assert valid0 = '0' report "(11)";
+			assert valid1 = '0' report "(12)";
+			
+			waitPeriod(1);
+			print("simulation finished");
+			
 		end if;		
 		finished <= true;
 	end process;
 	
 	-- instantiate design under test
 	DUT : entity work.fork(eager) 
-		port map(clk, reset, p_valid, n_ready0, n_ready1, ready, valid0, valid1);
+		port map(clk, reset, pValid, nReady0, nReady1, ready, valid0, valid1);
 		--port(	clk, reset,		-- the eager implementation uses registers
-		--		p_valid,
-		--		n_ready0, n_ready1 : in std_logic;
+		--		pValid,
+		--		nReady0, nReady1 : in std_logic;
 		--		ready, valid0, valid1 : out std_logic);
 	
 	-- ticks the clock
@@ -122,20 +139,20 @@ architecture testbench of tb_forkEager_RegisterBLock is
     signal currenttime : time    := 0 ns;	
 	constant CLK_PERIOD : time := 10 ns;	
 	
-	signal p_valid, n_stop, otherBlock_stop, fork_stop, forkStopAndPValid : std_logic;
+	signal pValid, n_stop, otherBlock_stop, fork_stop, forkStopAndPValid : std_logic;
 	signal valid, block_stop : std_logic; -- out
 	
 begin
 	
 	fork_stop <= block_stop or otherBlock_stop;
-	forkStopAndPValid <= p_valid and fork_stop;
+	forkStopAndPValid <= pValid and fork_stop;
 	
 	-- run simulation
 	sim : process
 		procedure resetSim is
 			begin
 				reset <= '1';
-				p_valid <= '0';
+				pValid <= '0';
 				n_stop <= '1';
 				otherBlock_stop <= '1';
 				wait until rising_edge(clk);
@@ -151,22 +168,49 @@ begin
 			wait for i * CLK_PERIOD;
 		end procedure;
 	begin
+	resetSim;
 	if(not finished)then 
 		
-		resetSim;
+		pValid <= '1';		-- valid data, but next not ready
+		waitPeriod(1);
+		assert valid = '1' report "(0)";
 		
-		p_valid <= '1';
-		otherBlock_stop <='1';
-		n_stop <= '0';	
-		waitPeriod(0.1); --can't assert directly on those signals, since dependant on the assignment we just did
-		assert block_stop='0' report "when the other channel is not ready, this block doesn't stop the fork" severity error;
-		assert valid='1' report"on the first cycle, it transmits the data since the next block is ready" severity error;
-		waitPeriod(0.9);
-		assert valid='0' report "since it transmitted data, it now has no more valid data until next channel unlocks" severity error;
+		n_stop <= '0';		-- next gets ready
+		waitPeriod(1);
+		assert block_stop = '0' report "(1)"; -- got data, should no longer be able to block the fork
+		assert forkStopAndPValid = '1' report "(2)"; -- the other block still blocks though
+		assert valid='0' report"(3)"; -- due to forkStopAndPValid='1' and n_stop='0', the register should have taken a 0, hence...
+		
 		otherBlock_stop <= '0';
+		waitPeriod(1); -- the other block got data, now we can remain valid as long as the other block doesn't stop and there's valid data
+		assert valid='1' report "(4)"; 
+		
 		waitPeriod(1);
-		assert valid='1' report "other channel unlocked, P-valid still 1, so new data has arrived and we should now be valid" severity error;
+		assert valid='1' report "(5)";
+		
 		waitPeriod(1);
+		assert valid='1' report "(6)";
+		
+		pValid <= '0';
+		waitPeriod(1);
+		assert valid='0' report "(7)"; -- there's no longer valid data
+		
+		pValid <= '1';
+		n_stop <= '1';	-- now we're blocking the fork
+		waitPeriod(1);
+		assert valid='1' report "(8)"; --there's valid data...
+		assert block_stop='1' report "(9)"; -- ...but we're blocking the fork
+		
+		waitPeriod(1);
+		assert valid='1' report "(10)"; -- still blocking
+		assert block_stop='1' report "(11)";
+		
+		n_stop <= '0';
+		waitPeriod(1);	-- we're no longer blocking
+		assert block_stop='0' report "(12)";
+		
+		waitPeriod(1);
+		assert false report "simulation finished" severity warning;
 		
 	end if;
 	finished <= true;
@@ -174,10 +218,10 @@ begin
 	
 	-- instantiate design under test
 	DUT : entity work.eagerFork_RegisterBLock 
-		port map( clk, reset, p_valid, n_stop, forkStopAndPValid, valid, block_stop);
+		port map( clk, reset, pValid, n_stop, forkStopAndPValid, valid, block_stop);
 		--port(	clk, reset, 
-		--p_valid, n_stop, 
-		--p_valid_and_fork_stop : in std_logic;
+		--pValid, n_stop, 
+		--pValid_and_fork_stop : in std_logic;
 		--valid, 	block_stop : out std_logic);
 	
 	-- ticks the clock
