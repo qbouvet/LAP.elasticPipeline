@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_textio.all;
 use std.textio.all;
+use work.customTypes.all;
 
 entity tb_forkEager is 
 end tb_forkEager;
@@ -16,6 +17,8 @@ architecture testbench of tb_forkEager is
 	
 	signal 	pValid, nReady0, nReady1 : std_logic := '0'; --in
 	signal	ready, valid0, valid1 : std_logic; --out
+	
+	signal internalNReadyArray, internalValidArray : bitArray_t(1 downto 0);
 	
 begin
 	
@@ -94,12 +97,15 @@ begin
 	end process;
 	
 	-- instantiate design under test
-	DUT : entity work.fork(eager) 
-		port map(clk, reset, pValid, nReady0, nReady1, ready, valid0, valid1);
-		--port(	clk, reset,		-- the eager implementation uses registers
-		--		pValid,
-		--		nReady0, nReady1 : in std_logic;
-		--		ready, valid0, valid1 : out std_logic);
+	DUT : entity work.forkN(eager) generic map(2)
+		port map(	clk, reset, 
+					pValid, 
+					internalNReadyArray, 
+					ready, 
+					internalValidArray);
+	-- wrapping signals
+	internalNReadyArray <= (nReady1, nReady0);
+	(valid1, valid0) <= internalValidArray;
 	
 	-- ticks the clock
 	clock : process

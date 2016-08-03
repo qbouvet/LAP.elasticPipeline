@@ -15,7 +15,7 @@ port(	clk, reset,		-- the eager implementation uses registers
 end forkN;
 
 ------------------------------------------------------------------------
--- lazy implementation based on cortadellas paper
+-- generic lazy implementation from cortadellas paper
 ------------------------------------------------------------------------
 architecture lazy of forkN is
 	signal allnReady : std_logic;
@@ -36,25 +36,93 @@ begin
 end lazy;
 
 ------------------------------------------------------------------------
--- tried some stuff
+-- generic eager implementation
 ------------------------------------------------------------------------
-architecture try of forkN is
-	signal allnReady : std_logic;
+architecture eager of forkN is
+-- wrapper signals (internals use "stop" signals instead of "ready" signals)
+	signal forkStop : std_logic;
+	signal nStopArray : bitArray_t(SIZE-1 downto 0);
+-- internal combinatorial signals
+	signal blockStopArray : bitArray_t(SIZE-1 downto 0);
+	signal anyBlockStop : std_logic;
+	signal pValidAndForkStop : std_logic;
 begin
-
-	genericAnd : entity work.andn generic map (SIZE)
-			port map(nReadyArray, allnReady);
 	
-	valids : process(pValid, nReadyArray, allnReady)
-	begin	
+	--can't adapt the signals directly in port map
+	wrapper : process(forkStop, nReadyArray)
+	begin
+		ready <= not forkStop;
 		for i in 0 to SIZE-1 loop
-			validArray(i) <= pValid and allnReady;
+			nStopArray(i) <= not nReadyArray(i);
 		end loop;
 	end process;
 	
-	ready <= allnReady and pValid;
+	genericOr : entity work.orN generic map (SIZE)
+		port map(blockStopArray, anyBlockStop);
+		
+	-- internal combinatorial signals
+	forkStop <= anyBlockStop; 
+	pValidAndForkStop <= pValid and forkStop;
 	
-end try;
+	--generate blocks
+	generateBlocks : for i in SIZE-1 downto 0 generate
+		regblock : entity work.eagerFork_RegisterBLock(vanilla)
+				port map(	clk, reset,
+							pValid, nStopArray(i),
+							pValidAndForkStop,
+							validArray(i), blockStopArray(i));
+	end generate;
+end eager;
+
+
+
+
+
+-----------------------------------------------  eagerFork_RegisterBLock
+------------------------------------------------------------------------
+-- this block contains the register and the combinatorial logic 
+-- around it, as in the design in cortadella elastis systems (paper 2)
+-- page 3
+-- a simple 2 way eager for uses 2 of those blocks
+------------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity eagerFork_RegisterBLock is
+port(	clk, reset, 
+		p_valid, n_stop, 
+		p_valid_and_fork_stop : in std_logic;
+		valid, 	block_stop : out std_logic);
+end eagerFork_RegisterBLock;
+
+architecture vanilla of eagerFork_RegisterBLock is
+	signal reg_value, reg_in, block_stop_internal : std_logic;
+begin
+	
+	block_stop_internal <= n_stop and reg_value;
+	
+	block_stop <= block_stop_internal;
+	
+	reg_in <= block_stop_internal or (not p_valid_and_fork_stop);
+	
+	valid <= reg_value and p_valid; 
+	
+	reg : process(clk, reset, reg_in)
+	begin
+		if(reset='1') then
+			reg_value <= '1'; --contains a "stop" signal - must be 1 at reset
+		else
+			if(rising_edge(clk))then
+				reg_value <= reg_in;
+			end if;
+		end if;
+	end process reg;
+	
+end vanilla;
+
+
+
+
 
 
 
@@ -73,10 +141,31 @@ PORT (	x : IN bitArray_t(N-1 downto 0);
 END andN;
 
 ARCHITECTURE vanilla OF andn IS
-	SIGNAL tmp : bitArray_t(n-1 downto 0);
+	SIGNAL dummy : bitArray_t(n-1 downto 0);
 BEGIN
-	tmp <= (OTHERS => '1');
-	res <= '1' WHEN x = tmp ELSE '0';
+	dummy <= (OTHERS => '1');
+	res <= '1' WHEN x = dummy ELSE '0';
+END vanilla;
+
+-----------------------------------------------------------------  orN
+------------------------------------------------------------------------
+-- size-generic OR gate used in the size-generic eager fork
+------------------------------------------------------------------------
+LIBRARY IEEE;
+USE ieee.std_logic_1164.all;
+use work.customTypes.all;
+
+ENTITY orN IS
+GENERIC (n : INTEGER := 4);
+PORT (	x : IN bitArray_t(N-1 downto 0);
+		res : OUT STD_LOGIC);
+END orN;
+
+ARCHITECTURE vanilla OF orN IS
+	SIGNAL dummy : bitArray_t(n-1 downto 0);
+BEGIN
+	dummy <= (OTHERS => '0');
+	res <= '0' WHEN x = dummy ELSE '1';
 END vanilla;
 
 
@@ -84,6 +173,13 @@ END vanilla;
 
 
 
+
+
+
+
+
+
+------------------------------------------------------------------------------------   non size-generic versions
 
 
 
@@ -112,7 +208,7 @@ end fork;
 ------------------------------------------------------------------------
 -- lazy implementation
 ------------------------------------------------------------------------
-architecture lazy of fork is
+architecture cortadellas of fork is
 begin
 
 	valid0 <= p_valid and n_ready0 and n_ready1;
@@ -120,25 +216,28 @@ begin
 	
 	ready <= n_ready0 and n_ready1;
 	
-end lazy;
+end cortadellas;
 
 ------------------------------------------------------------------------
--- lazy implementation (2)
+-- lazy implementation (2) -- doesn't work
 ------------------------------------------------------------------------
 architecture try of fork is
 begin
 
-	valid0 <= p_valid and n_ready0 and n_ready1;
-	valid1 <= p_valid and n_ready0 and n_ready1;
+	valid0 <= p_valid and n_ready1;
+	valid1 <= p_valid and n_ready0;
 	
 	ready <= (n_ready0 and n_ready1) and p_valid;
 	
 end try;
 
+
+
+
 ------------------------------------------------------------------------
--- eager implementation (not functionnal)
+-- eager implementation
 ------------------------------------------------------------------------
-architecture eager of fork is
+architecture eager of fork is	
 	signal fork_stop, block_stop0, block_stop1, n_stop0, n_stop1, pValidAndForkStop : std_logic;
 begin
 
@@ -157,67 +256,4 @@ begin
 					port map(clk, reset, p_valid, n_stop1, pValidAndForkStop, valid1, block_stop1);
 	
 end eager;
-
-
-
-
-
-
------------------------------------------------  eagerFork_RegisterBLock
-------------------------------------------------------------------------
--- this block contains the register and the combinatorial logic 
--- around it, as in the design in cortadella elastis systems (paper 2)
--- page 3
--- a simple 2 way eager for uses 2 of those blocks
-------------------------------------------------------------------------
-library ieee;
-use ieee.std_logic_1164.all;
-
-entity eagerFork_RegisterBLock is
-port(	clk, reset, 
-		p_valid, n_stop, 
-		p_valid_and_fork_stop : in std_logic;
-		valid, 	block_stop : out std_logic);
-end eagerFork_RegisterBLock;
-
-architecture eagerFork_RegisterBLock1 of eagerFork_RegisterBLock is
-	signal reg_value, reg_in, block_stop_internal : std_logic;
-begin
-	
-	block_stop_internal <= n_stop and reg_value;
-	
-	block_stop <= block_stop_internal;
-	
-	reg_in <= block_stop_internal or (not p_valid_and_fork_stop);
-	
-	valid <= reg_value and p_valid; 
-	
-	reg : process(clk, reset, reg_in)
-	begin
-		if(reset='1') then
-			reg_value <= '1'; --contains a "stop" signal - must be 1 at reset
-		else
-			if(rising_edge(clk))then
-				reg_value <= reg_in;
-			end if;
-		end if;
-	end process reg;
-	
-end eagerFork_RegisterBLock1;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
