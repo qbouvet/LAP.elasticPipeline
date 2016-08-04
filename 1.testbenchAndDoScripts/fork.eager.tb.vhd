@@ -7,7 +7,135 @@ use work.customTypes.all;
 entity tb_forkEager is 
 end tb_forkEager;
 
-architecture testbench of tb_forkEager is
+------------------------------------------------------------------------
+-- testbench for the generic eager fork, size 2
+------------------------------------------------------------------------
+architecture size5 of tb_forkEager is
+	
+	signal clk : std_logic := '0';
+	signal reset : std_logic;
+	signal finished    : boolean := false;
+    signal currenttime : time    := 0 ns;	
+	constant CLK_PERIOD : time := 10 ns;
+	
+	signal 	pValid : std_logic := '0'; --in
+	signal nReadyArray, validArray : bitArray_t(4 downto 0);
+	signal	ready : std_logic; --out
+	
+begin
+	
+	-- run simulation
+	sim : process
+		procedure resetSim is
+			begin
+				reset <= '1';
+				pValid <= '0';
+				nReadyArray <= (others => '0');
+				wait until rising_edge(clk);
+				wait for(CLK_PERIOD / 4);
+				reset<='0';
+		end procedure resetSim;
+		procedure waitPeriod(constant i : in real) is
+		begin
+			wait for i * CLK_PERIOD;
+		end procedure;		
+		procedure waitPeriod(constant i : in integer) is
+		begin
+			wait for i * CLK_PERIOD;
+		end procedure;			
+		--text output procedures
+		variable console_out : line;
+		procedure newline is
+		begin
+			console_out := new string'("");
+			writeline(output, console_out);
+		end procedure newline;
+		procedure print(msg : in string) is
+		begin
+			console_out := new string'(msg);
+			writeline(output, console_out);
+		end procedure print;
+	begin
+		if(not finished) then
+			resetSim;	
+			assert validArray = "00000" report "(1)";
+			assert ready = '0' report "(2)";
+			
+			nReadyArray <= "00001";		-- branch 0 is ready, but there's no valid data yet
+			waitPeriod(1);
+			assert validArray = "00000" report "(2)";
+			assert ready = '0' report "(3)";
+			
+			pValid <= '1';		-- now there's valid data
+			waitPeriod(0.5);
+			assert validArray = "11111" report "(4)"; --all branhces must announce the valid data
+			waitPeriod(0.5);
+			assert validArray = "11110" report "(5)"; -- branch 0 received the data, so fork no longer announces valid data to it
+			
+			waitPeriod(1);
+			assert validArray = "11110" report "(5)"; -- still in the same situation
+			
+			nReadyArray <= "01111";
+			assert validArray = "11110" report "(6)"; -- none of the remaining branches received the data
+			waitPeriod(1);
+			assert validArray = "10000" report "(7)"; -- all ready branches received the data, only branch 4 hasn't received yet 
+			assert ready = '0' report "(8)";	-- branch 4 stops the fork
+			
+			nReadyArray <= "11111";
+			waitPeriod(0.5); -- wait because ready depends directly on nReady0
+			assert ready <= '1' report "(10)"; -- at rising edge, all branches will have been served, so the fork can ask for the next piece of data
+			assert validArray = "10000" report "(11)"; -- only the 4th branch hadn't received data
+			waitPeriod(0.5); --rising edge happens there 
+			
+			pValid <= '0'; -- the data has been transmitted through the fork, there's no more valid data
+			waitPeriod(1);
+			assert validArray = "00000" report "(12)";
+			
+			nReadyArray <= "11111"; -- was already 11111 before, just to make sure
+			pValid <= '1';
+			waitPeriod(1);
+			assert validArray = "11111" report "(13)";	-- data should flow as long as all is ready
+			assert ready = '1' report "(14)";
+			waitPeriod(1);
+			assert validArray = "11111" report "(13)";
+			assert ready = '1' report "(14)";
+			waitPeriod(1);
+			assert validArray = "11111" report "(13)";
+			assert ready = '1' report "(14)";
+			
+			
+			print("simulation finished");
+			
+		end if;		
+		finished <= true;
+	end process;
+	
+	-- instantiate design under test
+	DUT : entity work.forkN(eager) generic map(5)
+		port map(	clk, reset, 
+					pValid, 
+					nReadyArray, 
+					ready, 
+					validArray);
+	
+	-- ticks the clock
+	clock : process
+    begin
+        if (finished) then
+            wait;
+        else
+            clk <= not clk;
+            wait for CLK_PERIOD / 2;
+            currenttime <= currenttime + CLK_PERIOD / 2;
+        end if;
+    end process clock;
+      
+end size5;
+
+------------------------------------------------------------------------
+-- testbench for the generic eager fork, size 2
+------------------------------------------------------------------------
+architecture size2 of tb_forkEager is
 	
 	signal clk : std_logic := '0';
 	signal reset : std_logic;
@@ -85,11 +213,23 @@ begin
 			waitPeriod(0.5);
 			
 			pValid <= '0'; -- there's no more valid data
-			waitPeriod(0.5);
+			waitPeriod(1);
 			assert valid0 = '0' report "(11)";
 			assert valid1 = '0' report "(12)";
 			
+			pValid <= '1';
+			nReady0 <= '1';
+			nReady1 <= '1';
 			waitPeriod(1);
+			assert valid0 = '1' report "(13)";
+			assert valid1 = '1' report "(14)";
+			waitPeriod(1);
+			assert valid0 = '1' report "(15)";
+			assert valid1 = '1' report "(16)";
+			waitPeriod(1);
+			assert valid0 = '1' report "(17)";
+			assert valid1 = '1' report "(18)";
+			
 			print("simulation finished");
 			
 		end if;		
@@ -119,7 +259,7 @@ begin
         end if;
     end process clock;
       
-end testbench;
+end size2;
 
 
 

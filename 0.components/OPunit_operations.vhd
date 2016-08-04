@@ -76,7 +76,7 @@ end op0;
 architecture forwarding of op0 is
 begin
 
-	joinArgs : entity work.join 
+	joinArgs : entity work.join(cortadellas)
 			port map(pValidArray(0), pValidArray(1), nReady, valid, readyArray(0), readyArray(1));
 
 	addArgs : entity work.adder 
@@ -108,7 +108,7 @@ architecture forwarding of op1 is
 	signal tempRes : std_logic_vector(31 downto 0);
 begin
 
-	joinArgs : entity work.join -- we don't need a join3 since we use 2 times the same argument
+	joinArgs : entity work.join(cortadellas) -- we don't need a join3 since we use 2 times the same argument
 			port map(pValidArray(0), pValidArray(1), nReady, valid, readyArray(0), readyArray(1));
 			
 	addArgs : entity work.adder 

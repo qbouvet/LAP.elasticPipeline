@@ -10,10 +10,13 @@ use ieee.std_logic_1164.all;
 entity join is
 port(
 	p_valid1, p_valid0, n_ready : in std_logic;
-	valid, ready0, ready1 : out std_logic);
+	valid, ready1, ready0 : out std_logic);
 end join;
 
-architecture lazy of join is
+---------------------------------------------------------------------
+-- the architecture as in cortadellas paper
+---------------------------------------------------------------------
+architecture cortadellas of join is
 begin
 
 	valid <= p_valid0 and p_valid1;
@@ -21,7 +24,19 @@ begin
 	ready0 <= (not p_valid0) or (p_valid0 and p_valid1 and n_ready); 
 	ready1 <= (not p_valid1) or (p_valid0 and p_valid1 and n_ready); 
 
-end lazy;
+end cortadellas;
+
+---------------------------------------------------------------------
+-- the architecture that does not get ready when waiting on a pValid signal
+---------------------------------------------------------------------
+architecture try of join is
+begin
+
+	valid <= p_valid0 and p_valid1;       
+	ready0 <= (p_valid0 and p_valid1 and n_ready); 
+	ready1 <= (p_valid0 and p_valid1 and n_ready); 
+
+end try;
 
 
 
@@ -44,18 +59,17 @@ port(	pValidArray : in bitArray_t(2 downto 0);
 end join3;
 
 architecture lazy of join3 is
-		-- internal valud for readybility
+		-- internal value for readybility
 	signal allPValid : std_logic;
 begin
 
-	valid <= pValidArray(0) and pValidArray(1) and pValidArray(2);
-	
-	allPValid <= (pValidArray(0) and pValidArray(1) and pValidArray(2));
+	valid <= allPValid;
 	
 	readyArray(0) <= (not pValidArray(0)) or (allPValid and nReady);
 	readyArray(1) <= (not pValidArray(1)) or (allPValid and nReady);
 	readyArray(2) <= (not pValidArray(2)) or (allPValid and nReady);
 	
+	allPValid <= (pValidArray(0) and pValidArray(1) and pValidArray(2));	
 	
 end lazy;
 		

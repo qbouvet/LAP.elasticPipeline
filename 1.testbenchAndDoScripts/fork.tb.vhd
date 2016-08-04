@@ -68,10 +68,33 @@ begin
 		-- finished procedures
 	begin
 	if(not finished)then 
+	
 		resetSim;
 		newline; print("simulation begins");
 		
+		--pValid = '0'
+		waitPeriod(1);
+		assert ready='0' severity error;
+		assert validArray="00" severity error;
+		
+		nReadyArray <= "01";
+		waitPeriod(1);
+		assert ready='0' severity error;
+		assert validArray="00" severity error;
+		
+		nReadyArray <= "10";
+		waitPeriod(1);
+		assert ready='0' severity error;
+		assert validArray="00" severity error;
+		
+		nReadyArray <= "11";
+		waitPeriod(1);
+		assert ready='1' severity error;
+		assert validArray="00" severity error;
+		
+		--pValid = '1'
 		pValid <= '1';
+		nReadyArray <= "00";
 		waitPeriod(1);
 		assert ready='0' severity error;
 		assert validArray="00" severity error;
@@ -81,7 +104,7 @@ begin
 		assert ready='0' severity error;
 		assert validArray="00" severity error;
 		
-		nReadyArray <= "01";
+		nReadyArray <= "10";
 		waitPeriod(1);
 		assert ready='0' severity error;
 		assert validArray="00" severity error;
@@ -90,11 +113,6 @@ begin
 		waitPeriod(1);
 		assert ready='1' severity error;
 		assert validArray="11" severity error;
-		
-		pValid <= '0';
-		waitPeriod(1);
-		assert ready='1' severity error;
-		assert validArray="00" severity error;
 		
 	end if;
 	newline;print("simulation finished");
@@ -105,9 +123,9 @@ begin
 	DUT : entity work.forkN(lazy) generic map(2)
 			port map( 	clk, reset,
 						pValid,
-						nReadyArray,	
-						validArray,
-						ready );
+						nReadyArray,
+						ready,	
+						validArray );
 	
 	-- ticks the clock
 	clock : process
@@ -131,7 +149,7 @@ end generic_size2_lazy;
 
 
 ------------------------------------------------------------------------
--- tests the fork2, lazy version
+-- tests the fork2, lazy version, only a few tests - rather use the generic version
 ------------------------------------------------------------------------
 architecture lazy of tb_fork is
 	

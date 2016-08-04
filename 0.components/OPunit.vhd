@@ -71,6 +71,55 @@ entity OPunit is
 end OPunit;
 
 ------------------------------------------------------------------------
+-- version elastic control signals and an eager fork
+------------------------------------------------------------------------
+architecture elasticEagerFork of OPunit is
+	signal fork_nReadyArray, fork_validArray : bitArray_t(1 downto 0);	-- (res1, res0), (op1, op0)
+	signal res0, res1 : std_logic_vector(31 downto 0);
+	signal selector_readyArray : bitArray_t(2 downto 0); 				-- (res1, res0, oc)
+	signal op0_readyArray, op1_readyArray : bitArray_t(1 downto 0);		-- (argA, argI), (argB, argA)
+	signal op0_valid, op1_valid : std_logic;
+begin
+	
+	-- fork for argument A
+	forkA : entity work.fork(eager)
+			port map (	clk, reset, 
+						pValidArray(2), 					-- p_valid
+						fork_nReadyArray(1),fork_nReadyArray(0),-- nReadyArray
+						readyArray(2),						-- ready
+						fork_validArray(1), fork_validArray(0));					-- validArray	
+	
+	addi : entity work.op0
+			port map (	argA, argI, 
+						res0, 
+						(fork_validArray(0), pValidArray(1)),	--pValidArray
+						selector_readyArray(1), 				-- nReady
+						op0_readyArray, 						-- readyArray
+						op0_valid);								-- valid
+	(fork_nReadyArray(0), readyArray(1)) <= op0_readyArray;
+			
+	sampleOp1 : entity work.op1
+			port map (	argA, argB, 
+						res1, 
+						(fork_validArray(1), pValidArray(3)),	--p_valid_array
+						selector_readyArray(2), 				-- n_ready
+						op1_readyArray, 						-- readyArray
+						op1_valid);								-- valid
+	(fork_nReadyArray(1), readyArray(3)) <= op1_readyArray;
+	
+	--prends dans l'ordre les control signals de : (2)res1, (1)res0, (0)oc				
+	selector : entity work.selectorBlock
+			port map (	res1, res0, oc, 
+						res, 
+						(op1_valid, op0_valid, pValidArray(0)),	-- pValidArray
+						nReady, 								-- nReady
+						selector_readyArray, 					-- readyArray	-- (op1, op0, oc)
+						valid);									-- valid
+	readyArray(0) <= selector_readyArray(0);
+	
+end elasticEagerFork;
+
+------------------------------------------------------------------------
 -- version with simple elastic control signals implementation
 ------------------------------------------------------------------------
 architecture elastic of OPunit is
@@ -120,6 +169,50 @@ begin
 end elastic;
 
 
+
+
+
+
+
+
+------------------------------------------------------------------------
+-- version with fewer blocks in it for debug purpose
+------------------------------------------------------------------------
+architecture debug4 of OPunit is
+
+	signal fork_nReadyArray, fork_validArray : bitArray_t(1 downto 0);	-- (res1, res0), (op1, op0)
+	signal res0, res1 : std_logic_vector(31 downto 0);
+	signal selector_readyArray : bitArray_t(2 downto 0); 				-- (res1, res0, oc)
+	signal op0_readyArray, op1_readyArray : bitArray_t(1 downto 0);		-- (argA, argI), (argB, argA)
+	signal op0_valid, op1_valid : std_logic;
+	
+begin
+
+	res1 <= argA;
+	res0 <= argA;
+	
+	forkArgA : entity work.forkN generic map(2)
+			port map(	clk, reset,
+						pValidArray(2),
+						fork_nReadyArray,
+						readyArray(2),
+						fork_validArray);
+	fork_nReadyArray <= selector_readyArray(2 downto 1);
+	
+	--prends dans l'ordre les control signals de : (2)res1, (1)res0, (0)oc
+	selector : entity work.selectorBlock
+			port map (	res1, res0, oc, 
+						res, 
+						(fork_validArray, pValidArray(0)),		-- pValidArray
+						nReady, 									-- nReady
+						selector_readyArray, 						-- readyArray	-- (op1, op0, oc)
+						valid);										-- valid
+						
+	readyArray(3) <= '1'; -- argB not used now
+	readyArray(1) <= '1'; -- argI not used now
+	readyArray(0) <= selector_readyArray(0);
+	
+end debug4;
 
 
 

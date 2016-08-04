@@ -99,7 +99,7 @@ begin
 	end process simulation;
 
 	--instanciating design under test
-	DUT : entity work.elasticBuffer_reg 
+	DUT : entity work.elasticBuffer(registersMultiplexer) 
 		generic map(32)
 		port map(	clk, reset, d_in, d_out, 
 					p_valid, n_ready, ready, valid);

@@ -29,19 +29,8 @@ architecture OPunit of TB_OPunit is
 begin
 	
 	sim : process
-		--text output procedures
-		variable console_out : line;
-		procedure newline is
-		begin	console_out := new string'("");
-				writeline(output, console_out);
-		end procedure newline;
-		procedure print(msg : in string) is
-		begin	console_out := new string'(msg);
-				writeline(output, console_out);
-		end procedure print;
 		procedure resetSim is
 		begin
-			print("reset");
 			reset <= '1';
 			oc <= (others => '0');
 			argI <= (others => '0');
@@ -52,7 +41,6 @@ begin
 			wait until rising_edge(CLK);
 			wait for CLK_PERIOD / 4;
 			reset <= '0';
-			print("reset done");
 		end procedure;			
 		--waiting procedures
 		procedure waitPeriod(constant i : in real) is
@@ -61,13 +49,23 @@ begin
 		procedure waitPeriod(constant i : in integer) is
 		begin	wait for i * CLK_PERIOD;
 		end procedure;	
+		--text output procedures
+		variable console_out : line;
+		procedure newline is
+		begin	console_out := new string'("");
+				writeline(output, console_out);
+		end procedure newline;
+		procedure print(msg : in string) is
+		begin	console_out := new string'(msg);
+				writeline(output, console_out);
+		end procedure print;
 		-- finished procedures
 	begin
 		resetSim;
 		if(not finished)then
 		
 			newline;print("simulation started");
-			newline;print("basic tests");
+			newline;print("basic data tests");
 			-- addi test
 			oc <= X"00000" & "000000100000"; -- op0-addi		
 			argA <= X"00000001";
@@ -78,7 +76,61 @@ begin
 			assert res=X"00000003" report "addi fails" severity error;
 			
 			waitPeriod(0.5);
-			--insert here
+			resetSim;
+			
+			--op1 test
+			oc <= X"00000" & "000001000000"; -- op1
+			argB <= X"00000001";
+			argA <= X"00000002";
+			nReady <= '1';
+			pValidArray <= (others => '1');
+			waitPeriod(1);
+			assert res=X"00000006" report "op1 fails" severity error;
+			
+			waitPeriod(0.5);
+			resetSim;
+			
+			newLine; print("control signals tests");
+			oc <= X"00000" & "000000100000"; -- op0-addi		
+			argA <= X"00000001";
+			argI <= X"00000002";
+			nReady <= '1';
+			pValidArray <= "1110";
+			waitPeriod(1);
+			assert valid='0' report "must stay invalid until all data is available" severity error;
+			assert readyArray="0001" report "ready signals array must switch to 0 on ready buffers when not all data is available, so that they keep the informations" severity error;
+			pValidArray <= "1101";
+			waitPeriod(1);
+			assert valid='0' report "must stay invalid until all data is available (2)" severity error;
+			assert readyArray="0010" report "ready signals array must switch to 0 on ready buffers when not all data is available, so that they keep the informations (2)" severity error;
+			pValidArray <= "1011";
+			waitPeriod(1);
+			assert valid='0' report "must stay invalid until all data is available (3)" severity error;
+			assert readyArray="0100" report "ready signals array must switch to 0 on ready buffers when not all data is available, so that they keep the informations (3)" severity error;
+			pValidArray <= "0111";
+			waitPeriod(1);
+			assert valid='0' report "must stay invalid until all data is available (4)" severity error;
+			assert readyArray="1000" report "ready signals array must switch to 0 on ready buffers when not all data is available, so that they keep the informations (4)" severity error;
+			pValidArray <= "0000";
+			waitPeriod(1);
+			assert valid='0' report "must stay invalid until all data is available (5)" severity error;
+			assert readyArray="1111" report "ready signals array must switch to 0 on ready buffers when not all data is available, so that they keep the informations (5)" severity error;
+			pValidArray <= "1111";			
+			nReady <= '0';
+			waitPeriod(1);
+			assert valid='0' report "must stay invalid until all data is available (6)" severity error;
+			assert readyArray="0000" report "ready signals array must switch to 0 when the next component isn't ready" severity error;
+			nReady <= '1';
+			waitPeriod(0.5);
+			assert valid = '1' report "should be valid now" severity error;
+			assert readyArray = "1111" report "should accept data now" severity error;
+			wait until rising_edge(CLK);
+			pValidArray <= "0000";
+			waitPeriod(0.25);
+			assert valid='0' report "no more data, can't be valid" severity error;
+			assert readyArray = "1111" report "next component still ready, no data incomming, should be ready" severity error;
+			
+			waitPeriod(1);
 			
 		end if;		
 		
@@ -87,7 +139,7 @@ begin
 	end process sim;
 
 	-- DUT instance
-	opu : entity work.OPunit(debug3)
+	opu : entity work.OPunit(elasticEagerFork)
 		port map(	clk, reset, 
 					argB, argA, argI, oc, 
 					res, 

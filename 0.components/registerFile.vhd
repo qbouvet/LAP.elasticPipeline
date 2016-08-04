@@ -1,22 +1,27 @@
 ---------------------------------------------------------- Register File
 ------------------------------------------------------------------------
--- the register file used in the circuit
+-- the register file used in the circuit. 
+-- Few notes on how it works :
+--	- control signals for read adresses and read data are directly 
+--		forwarded through the register since both reads are independant 
+-- 		from one another. join is done in the OPunit, if/where both 
+--		arguments are required
+--	- control signals for adrW, wrData use a join (and no output)
 ------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.customTypes.all;
 
-entity registerFile is
-port(
+entity registerFile is port(
 	clk, reset : in std_logic;
-	adrB, adrA, adrW, wrData : in std_logic_vector(31 downto 0);
-	pValidArray : in bitArray_t(3 downto 0); 
-	nReadyArray : in bitArray_t(1 downto 0);
+	adrA, adrB, adrW, wrData : in std_logic_vector(31 downto 0);
+	pValidArray : in bitArray_t(3 downto 0); -- adrA, adrB, adrW, wrData
+	nReadyArray : in bitArray_t(1 downto 0); -- a, b
 	
-	a, b : out std_logic_vector(31 downto 0);	
-	readyArray : out bitArray_t(3 downto 0);
-	validArray : out bitArray_t(1 downto 0)	
+	a, b  : out std_logic_vector(31 downto 0);	
+	readyArray : out bitArray_t(3 downto 0); -- adrA, adrB, adrW, wrData
+	validArray : out bitArray_t(1 downto 0)	 -- a, b
 );
 end registerFile;
 
@@ -33,8 +38,9 @@ architecture elastic of registerFile is
 	signal wrJoin_ready : std_logic; -- out of the join
 begin
 	
+	
 	-- reads and their control signals
-	reads : process(adrA, adrB, pValidArray, nReadyArray)
+	reads : process(adrA, adrB, pValidArray, nReadyArray, reg)
 	begin
 		a <= reg(to_integer(unsigned(adrA)));
 		b <= reg(to_integer(unsigned(adrB)));
@@ -45,9 +51,9 @@ begin
 	end process reads;
 	
 	-- joins the write adress' and the write data's elastic control signals
-	wrJoin : entity work.join(lazy) 
+	wrJoin : entity work.join(cortadellas) 
 			port map(	pValidArray(1), pValidArray(0), 
-						'1',
+						'1', -- we can write once per clock cycle
 						wrJoin_ready,
 						readyArray(1), readyArray(0));
 	
