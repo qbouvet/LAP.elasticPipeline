@@ -11,21 +11,22 @@ use work.customTypes.all;
 entity instructionFetcherDecoder is
 port(
 	clk, reset : in std_logic;
-	instr_in : in std_logic_vector(31 downto 0);
+	instr : in std_logic_vector(31 downto 0);
 	
 	adrB, adrA, adrW, argI, oc : out std_logic_vector(31 downto 0);
 	
 	-- elastic control signals
 	pValid : in std_logic;
-	nReadyArray : in bitArray_t(4 downto 0); -- in order : (4)adrB, adrA, adrW, argI, oc(0)
+	nReadyArray : in bitArray_t(4 downto 0); 	-- in order : (4)adrB, adrA, adrW, argI, oc(0)
 	ready : out std_logic;
-	validArray : out bitArray_t(4 downto 0); -- same order 
+	validArray : out bitArray_t(4 downto 0); 	-- same order 
 	
-	currentInstruction : out std_logic_vector -- to allow us to look what's going on inside during tests (cf circuit.vhd)
+	currentInstruction : out std_logic_vector; 	-- to allow us to look what's going on inside during tests (cf circuit.vhd)
+	ifdEmpty : out std_logic 					-- for simulation purpose
 ); end instructionFetcherDecoder;
 
-architecture vanilla of instructionFetcherDecoder is
-	signal instr : std_logic_vector(31 downto 0);
+architecture elastic of instructionFetcherDecoder is
+	signal instr_in : std_logic_vector(31 downto 0);
 	signal forkReady, instrReg_valid : std_logic;
 begin
 
@@ -38,15 +39,25 @@ begin
 	
 	-- an elastic buffer has the role of instruction register (holds the current instruction)
 	instructionRegister : entity work.elasticBuffer generic map (32)
-			port map(clk, reset, instr_in, instr, pValid, forkReady, ready, instrReg_valid);
+			port map(	clk, reset, 
+						instr, instr_in, 
+						pValid, 
+						forkReady, 
+						ready, 
+						instrReg_valid);
 	
 	-- a fork5 maps the instruction register's control signal to all the data outputs made from the isntruction
-	forkToOutputs : entity work.forkN generic map (5)
-			port map(clk, reset, instrReg_valid, nReadyArray, validArray, forkReady);
+	forkToOutputs : entity work.forkN(eager) generic map (5)
+			port map(	clk, reset,
+						instrReg_valid, 
+						nReadyArray, 
+						forkReady, 
+						validArray);
 	
-	currentInstruction <= instr;
+	currentInstruction <= instr_in;	-- for testing and observation purpose
+	ifdEmpty <= not instrReg_valid;
 	
-end vanilla;
+end elastic;
 
 
 
