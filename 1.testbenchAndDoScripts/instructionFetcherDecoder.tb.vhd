@@ -25,27 +25,18 @@ architecture testbench of TB_instructionFetcherDecoder is
 	
 begin
 
-	-- design under test
-
-
-	-- ticks the clock
-	clock : process
-    begin
-        if (finished) then
-            wait;
-        else
-            clk <= not clk;
-            wait for CLK_PERIOD / 2;
-            currenttime <= currenttime + CLK_PERIOD / 2;
-        end if;
-    end process clock;
 	
-	-- reads the next line, verifies it's not a comment, then holds it until the next rising clock where ifdReady='1' 
-	data_prvd : process
-		file instr_f : text is in "/home/quentin/Desktop/LAP/00.ElasticPipeline/1.testbenchAndDoScripts/instructionFetcherDecoder.instruction.txt";
-		variable line_in : line;
-		variable WORD : std_logic_vector(31 downto 0);
-		variable readInstruction : boolean := false;
+-- runs simulation
+	sim : process is	
+	--reset procedure
+		procedure reset_sim is
+		begin
+			reset <= '1';
+			nReadyArray <= "00000";
+			wait until rising_edge(clk);
+			wait for CLK_PERIOD / 4;
+			reset <= '0';
+		end procedure reset_sim;
 	-- text output procedures
 		variable console_out : line;
 		procedure newline is
@@ -58,6 +49,74 @@ begin
 			console_out := new string'(msg);
 			writeline(output, console_out);
 		end procedure print;
+	--waiting procedures
+		procedure waitPeriod is
+		begin	wait for CLK_PERIOD;
+		end procedure;	
+		procedure waitPeriod(constant i : in real) is
+		begin	wait for i * CLK_PERIOD;
+		end procedure;		
+		procedure waitPeriod(constant n : in integer) is
+		begin	wait for n * CLK_PERIOD;
+		end procedure;	
+	-- end of procedures
+	begin
+		reset_sim;	
+		
+		-- instr is always valid, instrValid ='1' always
+		
+		nReadyArray <= "00000";
+		waitPeriod;
+		assert validArray="11111" report "(0)";	-- there's valid data for all the output channels
+		waitPeriod(2);
+		assert ifdReady = '0' report "(1)"; 	-- the ifd's buffer will store the first 2 instructions, then will turn not ready
+		assert validArray="11111" report "(2)";	-- there's valid data for all the output channels
+		
+		nReadyArray <= "01110";
+		waitPeriod;
+		assert ifdReady = '0' report "(3)"; 	-- still not all the outputs are ready
+		assert validArray="10001" report "(4)";	-- some output channels have been served
+		
+		nReadyArray <= "11111";
+		waitPeriod(0.5);
+		assert validArray="10001" report "(5)";
+		assert ifdReady = '1' report "(6)";		-- the IFD will finish passing the first instruction to all channels by the end of this clock, so it'll be ready for a new instruction
+		waitPeriod(0.5);
+		assert validArray="11111" report "(7)";
+		
+		waitPeriod;								-- data flows (all nReady and valid)
+		assert ifdReady = '1' report "(8)";
+		assert validArray="11111" report "(9)";
+		
+		waitPeriod;								-- again
+		assert ifdReady = '1' report "(10)";
+		assert validArray="11111" report "(11)";
+		
+		print("simulation finished");
+		wait;
+		
+	end process;
+
+
+	-- design under test
+	DUT : entity work.instructionFetcherDecoder 
+			port map (	clk, reset,
+						instr, 						-- in
+						adrB, adrA, adrW, argI, oc,	-- out
+						instrValid,					-- in (pValid)
+						nReadyArray,				-- in
+						ifdReady, 					-- out
+						validArray, 				-- out
+						currentHeldInstruction);	-- out (for test purpose)
+
+
+	
+	-- reads the next line, verifies it's not a comment, then holds it until the next rising clock where ifdReady='1' 
+	data_prvd : process
+		file instr_f : text is in "/home/quentin/Desktop/LAP/00.ElasticPipeline/1.testbenchAndDoScripts/instructionFetcherDecoder.instruction.txt";
+		variable line_in : line;
+		variable WORD : std_logic_vector(31 downto 0);
+		variable readInstruction : boolean := false;
 	-- text read procedures
 		procedure readNextInstruction is
 		begin		
@@ -65,6 +124,7 @@ begin
 			while not readInstruction loop													-- while we didn't read an actual instruction
 				if(endfile(instr_f)) then														-- if end of file
 					instrValid <= '0';																-- set the finished and instrValid signals
+					wait until validArray="00000"; --on attends de vider le buffer de l'IFD
 					finished <= true;				
 					wait;
 				else																			-- else
@@ -90,34 +150,21 @@ begin
 			readNextInstruction;
 			wait until rising_edge(clk) and ifdReady='1';
 		end if;
-end process data_prvd;
+	end process data_prvd;
 	
--- run simulation
-	sim : process is	
-		procedure reset_sim is
-		begin
-			reset <= '1';
-			wait until rising_edge(clk);
-			wait for 3 * CLK_PERIOD / 4;
-			reset <= '0';
-		end procedure reset_sim;
-	--waiting procedures
-		procedure waitPeriod is
-		begin	wait for CLK_PERIOD;
-		end procedure;	
-	begin
-		reset_sim;
-		
-		ifdReady <= '0';
-		waitPeriod;
-		
-		waitPeriod;
-		
-		ifdReady <= '1';
-		waitPeriod;
-		waitPeriod;
-		
-		wait;
-		
-	end process;
+	
+
+	-- ticks the clock
+	clock : process
+    begin
+        if (finished) then
+            wait;
+        else
+            clk <= not clk;
+            wait for CLK_PERIOD / 2;
+            currenttime <= currenttime + CLK_PERIOD / 2;
+        end if;
+    end process clock;
+
+
 end testbench;
