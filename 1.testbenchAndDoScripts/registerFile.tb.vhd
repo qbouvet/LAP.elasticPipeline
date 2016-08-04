@@ -127,11 +127,25 @@ begin
 		adrW <= X"00000000";
 		waitPeriod(1);
 		
+		
 	-- test the data reads
-		-- TODO - not so important 
+		newline;print("data is read correctly");
+		
+		adrA <= X"00000001";
+		adrB <= X"00000002";
+		waitPeriod(1);
+		assert a=X"00000001"report "(11)";
+		assert b= X"00000002"report "(12)";
+		
+		adrA <= X"00000003";
+		adrB <= X"00000003";
+		waitPeriod(1);
+		assert a=X"00000003"report "(13)";
+		assert b=X"00000003"report "(14)";
 		
 		newline;print("simulation finished");
 		
+		waitPeriod(1);
 		finished <= true;
 	end process sim;
 	
