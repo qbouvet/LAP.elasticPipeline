@@ -13,8 +13,8 @@ entity circuit is port(
 	dataValid : in std_logic;
 	data : in std_logic_vector(31 downto 0);
 	instrOut, resOut : out std_logic_vector(31 downto 0); -- to allow us to look what's going on inside during tests
-	resValid : out std_logic;	--same
-	ifdEmpty : out std_logic); --same
+	resValid,ifdEmpty : out std_logic;	--same
+	rf_a, rf_b: out std_logic_vector(31 downto 0)); --same
 end circuit;
 
 
@@ -70,6 +70,9 @@ begin
 						RFreadyArray(0), 							-- nReady
 						OPUresultValid,								-- valid
 						OPUreadyArray);
+						
+	rf_a <= operandA;	-- for debug
+	rf_b <= operandB;
 						
 	-- signals for observation purpose
 	resOut <= opResult;

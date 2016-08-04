@@ -18,10 +18,11 @@ architecture elasticBasic of TB_circuit is
 	signal data : std_logic_vector(31 downto 0); 	-- set in dataPrvd
 	signal dataValid : std_logic;
 	
-	signal instrOut, resOut : std_logic_vector(31 downto 0); 	-- outputs of the circuit (for observation purpose)
+	signal currentInstruction, resOut : std_logic_vector(31 downto 0); 	-- outputs of the circuit (for observation purpose)
 	signal IFDready, resValid : std_logic; 
 	
 	signal ifdEmpty : std_logic; 	--to check when to finish the simulation
+	signal rf_a, rf_b : std_logic_vector(31 downto 0);
 	
 	--signal lastCyclesData : std_logic_vector(31 downto 0); --used in instr_check
 	--signal skippedInstructionFetch : std_logic; -- for debug
@@ -99,7 +100,8 @@ begin
 						IFDready,	-- ready
 						dataValid,	-- pValid
 						data, 
-						instrOut, resOut, resValid, ifdEmpty);
+						currentInstruction, resOut, resValid, ifdEmpty,
+						rf_a, rf_b);
 	
 	
 	-- ticks the clock
