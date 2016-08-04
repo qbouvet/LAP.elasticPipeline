@@ -12,10 +12,10 @@ entity circuit is port(
 	IFDready : out std_logic;
 	dataValid : in std_logic;
 	data : in std_logic_vector(31 downto 0);
-	instr_out, res_out : out std_logic_vector(31 downto 0)); -- to allow us to look what's going on inside during tests
+	instrOut, resOut : out std_logic_vector(31 downto 0); -- to allow us to look what's going on inside during tests
+	resValid : out std_logic;	--same
+	ifdEmpty : out std_logic); --same
 end circuit;
-
-
 
 
 
@@ -23,9 +23,9 @@ end circuit;
 -- first elastic implementation, cf cortadella's paper, p8, fig 13a
 ------------------------------------------------------------------------
 architecture elasticBasic of circuit is
-
+	
 	--output and control signals of the IFD
-	signal adrA, adrB, adrW, argI, oc : std_logic_vector;
+	signal adrA, adrB, adrW, argI, oc : std_logic_vector(31 downto 0);
 	signal IFDvalidArray : bitArray_t(4 downto 0);
 	-- result of the operation, for writeback
 	signal opResult : std_logic_vector(31 downto 0);
@@ -34,39 +34,45 @@ architecture elasticBasic of circuit is
 	signal RFvalidArray : bitArray_t(1 downto 0);
 	signal RFreadyForWrdata : std_logic;
 	-- registerFile output
-	signal operandA, operandeB : std_logic_vector(31 downto 0);	
+	signal operandA, operandB : std_logic_vector(31 downto 0);	
 	--OP unit control signals
 	signal OPUresultValid : std_logic;
 	signal OPUreadyArray : bitArray_t(3 downto 0);
 	
 begin
 
-	instructionFetchedDecoder : entity work.instructionFetcherDecoder(vanilla) 
+	instructionFetchedDecoder : entity work.instructionFetcherDecoder(elastic) 
 			port map(	clk, reset, 
 						data, 						-- instr_in
 						adrB, adrA, adrW, argI, oc, 
 						dataValid,					-- pValid
 						(RFreadyArray(3 downto 1), OPUreadyArray(1 downto 0)),	-- nReadyArray
 						IFDready, 					-- ready
-						IFDvalidArray);				-- ValidArray
+						IFDvalidArray,				-- ValidArray
+						instrOut,	-- outputs the instruction for observation purpose
+						ifdEmpty);	-- for simulation purpose, decides when to stop the sim
 	
-	regFile : entity work.registerFile(registersMultiplexer)
+	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
 						adrB, adrA, adrW, opResult, 
-						(IFDvalidArray(4 downto 2), OPU_resValid), 	-- pValidArray
+						(IFDvalidArray(4 downto 2), OPUresultValid),-- pValidArray
 						OPUreadyArray(3 downto 2), 					-- nReadyArray
-						operandeA, operandeB, 
+						operandA, operandB, 
 						RFreadyArray, 								-- readyArray
 						RFvalidArray);								-- validArray
-	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;
+	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
 	
-	OPU : entity work.OPunit(elastic)
+	OPU : entity work.OPunit(elasticEagerFork)
 			port map(	clk, reset,
-						operandeB, operandeA, argI, oc, 
+						operandB, operandA, argI, oc, 
 						opResult, 
 						(RFvalidArray, IFDvalidArray(1 downto 0)),	-- pValidArray
-						RFreadyForWrdata, 							-- nReady
+						RFreadyArray(0), 							-- nReady
 						OPUresultValid,								-- valid
 						OPUreadyArray);
+						
+	-- signals for observation purpose
+	resOut <= opResult;
+	resValid <= OPUresultValid;
 						
 end elasticBasic;
