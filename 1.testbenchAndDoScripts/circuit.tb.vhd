@@ -1,6 +1,8 @@
 ------------------------------------------------------------  TB_circuit
 ------------------------------------------------------------------------
 -- a testbench for the circuit implemented.
+-- does not implement any assertion or verification of correct behaviour
+-- you'll need to check it on modelsim's wave
 ------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
@@ -99,7 +101,7 @@ begin
 	
 	
 	--instantiates the DUT
-	circ : entity work.circuit(elasticBasic_delayedResult) 
+	circ : entity work.circuit(elasticBasic_delayedResult3) 
 			port map(	reset, clk, 
 						IFDready,	-- ready
 						dataValid,	-- pValid
