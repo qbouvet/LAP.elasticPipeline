@@ -1,8 +1,29 @@
 -----------------------------------------------------  elasticBuffer
 ---------------------------------------------------------------------
 -- the "2register-1multiplexer" implementation from cortadella's 
--- papers
+-- papers.
+-- is size-generic
+-- architectures : 	- vanilla
 ---------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity elasticBuffer is
+GENERIC(
+	DATA_SIZE : integer);
+port(
+	clk, reset : in std_logic;
+	
+	d_in : in std_logic_vector(DATA_SIZE-1 downto 0);
+	d_out : out std_logic_vector(DATA_SIZE-1 downto 0);
+	
+	p_valid, n_ready : in std_logic;
+	ready, valid : out std_logic);
+end elasticBuffer;
+-- architectures below
+
+
 
 
 
@@ -105,26 +126,11 @@ end registersMultiplexer;
 
 
 
+
+
 ------------------------------------------------------------------------ 
 -- elastic buffer itself
 ------------------------------------------------------------------------ 
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-
-entity elasticBuffer is
-GENERIC(
-	DATA_SIZE : integer);
-port(
-	clk, reset : in std_logic;
-	
-	d_in : in std_logic_vector(DATA_SIZE-1 downto 0);
-	d_out : out std_logic_vector(DATA_SIZE-1 downto 0);
-	
-	p_valid, n_ready : in std_logic;
-	ready, valid : out std_logic);
-end elasticBuffer;
-
 architecture vanilla of elasticBuffer is
 	
 	signal aux_wren : std_logic;
