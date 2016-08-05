@@ -16,11 +16,11 @@ architecture testbench of tb_delayChannel is
 	constant CLK_PERIOD : time := 10 ns;	
 	
 	signal d_in : std_logic_vector(31 downto 0);
-	signal d_out : vectorArray_t(0 to 3)(31 downto 0);
+	signal d_out : vectorArray_t(3 downto 0)(31 downto 0);
 	
 	signal p_valid, n_ready,
 			ready : std_logic;
-	signal valid : bitArray_t(0 to 3);
+	signal valid : bitArray_t(3 downto 0);
 	
 begin
 	
@@ -82,7 +82,7 @@ begin
 	end process;
 	
 	-- instantiate design under test
-	DUT : entity work.delayChannel(generique) generic map(32, 3)
+	DUT : entity work.delayChannel(vanilla) generic map(32, 3)
 			port map(clk, reset, d_in, d_out, valid, p_valid, n_ready, ready);
 --			port(	clk, reset : in std_logic;
 --				data_in : in std_logic_vector(DATA_SIZE-1 downto 0);
