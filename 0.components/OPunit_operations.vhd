@@ -55,9 +55,9 @@ end adder1;
 
 
 ------------------------------------------------------------------------
--- an "operation" block with elastic control signals
+-- this is the "immediate addition" operation
+-- implemented as an "operation" block with elastic control signals
 -- integrates the "join" block for its arguments, but no buffer (yet)
--- this one will be the "immediate addition" operation - takes 1 cycle
 ------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;

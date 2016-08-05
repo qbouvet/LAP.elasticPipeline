@@ -15,7 +15,7 @@ use work.customTypes.all;
 
 entity registerFile is port(
 	clk, reset : in std_logic;
-	adrA, adrB, adrW, wrData : in std_logic_vector(31 downto 0);
+	adrB, adrA, adrW, wrData : in std_logic_vector(31 downto 0);
 	pValidArray : in bitArray_t(3 downto 0); -- adrA, adrB, adrW, wrData
 	nReadyArray : in bitArray_t(1 downto 0); -- a, b
 	
@@ -40,15 +40,12 @@ begin
 	
 	
 	-- reads and their control signals
-	reads : process(adrA, adrB, pValidArray, nReadyArray, reg)
-	begin
-		a <= reg(to_integer(unsigned(adrA)));
-		b <= reg(to_integer(unsigned(adrB)));
-		validArray(1) <= pValidArray(3); -- we suppose the reads happen instantly, so we just forward the control signals
-		validArray(0) <= pValidArray(2);
-		readyArray(3) <= nReadyArray(1);
-		readyArray(2) <= nReadyArray(0);
-	end process reads;
+	a <= reg(to_integer(unsigned(adrA)));
+	b <= reg(to_integer(unsigned(adrB)));
+	validArray(1) <= pValidArray(3); -- we suppose the reads happen instantly, so we just forward the control signals
+	validArray(0) <= pValidArray(2);
+	readyArray(3) <= nReadyArray(1);
+	readyArray(2) <= nReadyArray(0);
 	
 	-- joins the write adress' and the write data's elastic control signals
 	wrJoin : entity work.join(cortadellas) 

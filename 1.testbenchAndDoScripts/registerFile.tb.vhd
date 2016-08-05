@@ -114,6 +114,7 @@ begin
 		resetSim;
 		
 	-- fills the register file so that we have stuff to read from it
+		pValidArray <= "0011";	-- won't write unless we have valid data for the join
 		wrData <= X"00000001";
 		adrW <= X"00000001";
 		waitPeriod(1);
@@ -145,7 +146,7 @@ begin
 		
 		newline;print("simulation finished");
 		
-		waitPeriod(1);
+		waitPeriod(5);
 		finished <= true;
 	end process sim;
 	

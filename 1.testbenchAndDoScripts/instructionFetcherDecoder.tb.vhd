@@ -149,6 +149,7 @@ begin
 		else		
 			readNextInstruction;
 			wait until rising_edge(clk) and ifdReady='1';
+			wait for CLK_PERIOD / 4; -- don't loop immediately, for clarity on the wave of modelsim
 		end if;
 	end process data_prvd;
 	
