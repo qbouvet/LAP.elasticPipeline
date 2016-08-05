@@ -1,6 +1,9 @@
 ---------------------------------------------------------------- Circuit
 ------------------------------------------------------------------------
 -- implementation of the circuit described in cortadella's papers
+-- architectures : 	- elasticBasic
+--					- elasticBasic_delayedResultWriteback
+-- 					- elasticBasic_delayedResult3
 ------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
@@ -190,7 +193,7 @@ architecture elasticBasic_delayedResultWriteback of circuit is
 	
 	-- elastic buffer's signals
 	signal ebValid, ebReady : std_logic;
-	signal opResult_ebOut : std_logic_vector(31 downto 0);
+	signal ebOut : std_logic_vector(31 downto 0);
 	
 begin
 
@@ -208,7 +211,7 @@ begin
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
 						adrB, adrA, adrW, opResult, 
-						(IFDvalidArray(4 downto 2), ebValid),		-- pValidArray
+						(IFDvalidArray(4 downto 2), ebReady),-- pValidArray
 						OPUreadyArray(3 downto 2), 					-- nReadyArray
 						operandA, operandB, 
 						RFreadyArray, 								-- readyArray
@@ -220,22 +223,21 @@ begin
 						operandB, operandA, argI, oc, 
 						opResult, 
 						(RFvalidArray, IFDvalidArray(1 downto 0)),	-- pValidArray
-						ebReady, 									-- nReady
+						ebReady, 							-- nReady
 						OPUresultValid,								-- valid
 						OPUreadyArray);
 						
-	EB : entity work.elasticBuffer(vanilla) generic map(32)
+	eb : entity work.elasticBuffer(vanilla) generic map(32)
 			port map(	clk, reset,
-						opResult, opResult_EBout,
+						opResult, ebOut,
 						OPUresultValid, RFreadyArray(0),
-						EBvalid, ebReady);
-						
+						ebReady, ebValid);
 						
 	rf_a <= operandA;	-- for debug
 	rf_b <= operandB;
 						
 	-- signals for observation purpose
-	resOut <= opResult;
-	resValid <= OPUresultValid;
+	resOut <= ebOut;
+	resValid <= ebValid;
 						
 end elasticBasic_delayedResultWriteback;
