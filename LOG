@@ -1,12 +1,17 @@
 ------------------------------------------------------------------------------------------------------------
 TODO	
 
-	what's the difference between join and merge ? what's the branch ?
+	implement the "merge" and ""branch"
+			what's the difference between join and merge ? what's the branch ? 
+					-> branch <-> demultiplexer
 	
-	try stuff with the circuit(a)
-			NB :  can't do operations with different latency (cf NOTES)
+	try stuff with the circuit(a) (mostly allows to test if the control signals work correctly when stalling)
+			NB :  what can we actually do ? cf NOTES
+			add 3 buffers just after the OP unuit and check if IFD stall alright		-> alright
+					fix delayChannel (buffers output array is enumerated in the wrong order somehow) 
+			fix the infinite loop at the end in the "single delay buffer" version of the circuit 
 	
-	make instructions simpler
+	make instructions simpler + make it so that (others => '0') is addi r0 r0 r0 to avoid 'X' shitty stuff in simulations
 	
 	do a version of the circuit with elasticBuffers (complex version)
 			pipeline OP unit - test OP unit 
@@ -21,6 +26,8 @@ TODO
 	think/read about antitoken channel issuse	
 	implement the latch version of elasticBuffer for comparison
 	debug the rest of the early evaluation multiplexer
+	
+	document stuff
 
 
 
@@ -28,7 +35,12 @@ TODO
 ------------------------------------------------------------------------------------------------------------
 NOTES  
 
-	circuit(a) : not a ton of thing to do : namely can't do operations with different latency (otherwise, we could get 2 results to the selector in 1 period -> problem), right ?
+	circuit(a) : can you have instructions with different latency ?
+			-> when 2 results arrive at selector at the same time, need to select the correct one and stall the other
+			-> data can be reordered between very fast and very slow instructions, so would need to reorder the write addresses as well
+					-> do a similar delay path for the write addresses based on the opcode
+					-> and then, when 2 write addresses arrive at the same time at the register file, select&stall using the same component as the results
+		-> surely possible, but worth it ? (since the next version has memory bypasses and stuff that will handle the issue more efficitenly)
 
 	registerFile : cant there be read/write issues ? i.e reading stuff that hasn't been written back yet and stuff ?
 	
@@ -61,6 +73,11 @@ NOTES
 ------------------------------------------------------------------------------------------------------------
 DONE
 	
+	try stuff with the circuit(a) (mostly allows to test if the control signals work correctly when stalling)
+			NB :  what can we actually do ? cf NOTES
+			add 3 buffers just after the OP unuit and check if IFD stall alright		-> alright
+					fix delayChannel (buffers output array is enumerated in the wrong order somehow) 
+			add 1 buffer to delay the result arrival to the register file for writeback
 	
 	do a version of the ciruit with elastic components (simple version, no buffers)	
 			changed data providing process

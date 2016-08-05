@@ -85,7 +85,7 @@ end elasticBasic;
 
 
 
-
+  
 ------------------------------------------------------------------------
 -- based on elasticBasic implementation
 -- added a delayChannel after the OPunit, so that the result (both 

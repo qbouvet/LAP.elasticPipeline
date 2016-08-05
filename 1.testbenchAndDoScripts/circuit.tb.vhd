@@ -35,7 +35,7 @@ architecture elasticBasic of TB_circuit is
 	
 begin
 
-		
+		 
 	-- run simulation
 	sim : process
 		procedure reset_sim is

@@ -75,7 +75,7 @@ end vanilla;
 
 
 
-
+-- to remove if all works well
 architecture backup of delayChannel is
 	type bitArray is array(integer range <>) of std_logic;
 	--signals used to link the buffers together	
