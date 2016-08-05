@@ -1,3 +1,7 @@
+------------------------------------------------------------  TB_circuit
+------------------------------------------------------------------------
+-- a testbench for the circuit implemented.
+------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -95,7 +99,7 @@ begin
 	
 	
 	--instantiates the DUT
-	circ : entity work.circuit(elasticBasic) 
+	circ : entity work.circuit(elasticBasic_delayedResult) 
 			port map(	reset, clk, 
 						IFDready,	-- ready
 						dataValid,	-- pValid
