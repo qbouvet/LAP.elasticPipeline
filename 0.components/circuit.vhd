@@ -16,8 +16,8 @@ entity circuit is port(
 	dataValid : in std_logic;
 	data : in std_logic_vector(31 downto 0);
 	instrOut, resOut : out std_logic_vector(31 downto 0); -- to allow us to look what's going on inside during tests
-	resValid,ifdEmpty : out std_logic;	--same
-	rf_a, rf_b: out std_logic_vector(31 downto 0)); --same
+	resValid,ifdEmpty, buffer_valid, adrW_ready : out std_logic;	--same
+	rf_a, rf_b : out std_logic_vector(31 downto 0)); --same
 end circuit;
 
 
@@ -62,7 +62,8 @@ begin
 						OPUreadyArray(3 downto 2), 					-- nReadyArray
 						operandA, operandB, 
 						RFreadyArray, 								-- readyArray
-						RFvalidArray);								-- validArray
+						RFvalidArray								-- validArray
+						);
 	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
 	
 	OPU : entity work.OPunit(elasticEagerFork)
@@ -85,13 +86,97 @@ end elasticBasic;
 
 
 
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------- Implementations made for testing
+---------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
+
+
+
+
+------------------------------------------------------------------------
+-- based on elasticBasic implementation
+-- added 3 buffers on the 'oc' signal way to the OPunit
+-- should stall the  pipeline for 3 cycles every instruction
+------------------------------------------------------------------------
+architecture elasticBasic_delayedOc3 of circuit is
+	
+	--output and control signals of the IFD
+	signal adrA, adrB, adrW, argI, oc : std_logic_vector(31 downto 0);
+	signal IFDvalidArray : bitArray_t(4 downto 0);
+	-- result of the operation, for writeback
+	signal opResult : std_logic_vector(31 downto 0);
+	-- registerFile control signals
+	signal RFreadyArray : bitArray_t(3 downto 0);
+	signal RFvalidArray : bitArray_t(1 downto 0);
+	signal RFreadyForWrdata : std_logic;
+	-- registerFile output
+	signal operandA, operandB : std_logic_vector(31 downto 0);	
+	--OP unit control signals
+	signal OPUresultValid : std_logic;
+	signal OPUreadyArray : bitArray_t(3 downto 0);
+	
+begin
+
+	instructionFetchedDecoder : entity work.instructionFetcherDecoder(elastic) 
+			port map(	clk, reset, 
+						data, 						-- instr_in
+						adrB, adrA, adrW, argI, oc, 
+						dataValid,					-- pValid
+						(RFreadyArray(3 downto 1), OPUreadyArray(1 downto 0)),	-- nReadyArray
+						IFDready, 					-- ready
+						IFDvalidArray,				-- ValidArray
+						instrOut,	-- outputs the instruction for observation purpose
+						ifdEmpty);	-- for simulation purpose, decides when to stop the sim
+	
+	regFile : entity work.registerFile(elastic)
+			port map(	clk, reset, 
+						adrB, adrA, adrW, opResult, 
+						(IFDvalidArray(4 downto 2), OPUresultValid),-- pValidArray
+						OPUreadyArray(3 downto 2), 					-- nReadyArray
+						operandA, operandB, 
+						RFreadyArray, 								-- readyArray
+						RFvalidArray								-- validArray
+						);
+	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
+	
+	OPU : entity work.OPunit(elasticEagerFork)
+			port map(	clk, reset,
+						operandB, operandA, argI, oc, 
+						opResult, 
+						(RFvalidArray, IFDvalidArray(1 downto 0)),	-- pValidArray
+						RFreadyArray(0), 							-- nReady
+						OPUresultValid,								-- valid
+						OPUreadyArray);
+						
+	rf_a <= operandA;	-- for debug
+	rf_b <= operandB;
+						
+	-- signals for observation purpose
+	resOut <= opResult;
+	resValid <= OPUresultValid;
+						
+end elasticBasic_delayedOc3;
+
+
+
+
   
 ------------------------------------------------------------------------
 -- based on elasticBasic implementation
 -- added a delayChannel after the OPunit, so that the result (both 
 -- output in the testbench and for writeback into the register file)
 -- is delayed by 3 cycles
--- should make the pipeline stall for 3 cycles at start, since the 
+-- should make the pipeline stall for 3 cycles every instruction, since the 
 -- registerFile will wait on data to write
 ------------------------------------------------------------------------
 architecture elasticBasic_delayedResult3 of circuit is
@@ -173,6 +258,9 @@ end elasticBasic_delayedResult3;
 -- based on the elasticBasic implementation.
 -- added an elastic buffer to delay the arrival of the OPresult to the
 -- register file for writeback
+-- should stall the circuit for 1 cycle at the beggining, then 
+-- should operate normally, since it's a single elastic buffer, 
+-- the control signals shoud be able to "rotate"
 ------------------------------------------------------------------------
 architecture elasticBasic_delayedResultWriteback of circuit is
 	
@@ -215,7 +303,8 @@ begin
 						OPUreadyArray(3 downto 2), 					-- nReadyArray
 						operandA, operandB, 
 						RFreadyArray, 								-- readyArray
-						RFvalidArray);								-- validArray
+						RFvalidArray,								-- validArray
+						adrW_ready);  --debug
 	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
 	
 	OPU : entity work.OPunit(elasticEagerFork)
@@ -235,6 +324,8 @@ begin
 						
 	rf_a <= operandA;	-- for debug
 	rf_b <= operandB;
+	
+	buffer_valid <= ebValid;
 						
 	-- signals for observation purpose
 	resOut <= ebOut;

@@ -27,7 +27,7 @@ architecture elasticBasic of TB_circuit is
 	signal currentInstruction, resOut : std_logic_vector(31 downto 0); 	-- outputs of the circuit (for observation purpose)
 	signal IFDready, resValid : std_logic; 
 	
-	signal ifdEmpty : std_logic; 	--to check when to finish the simulation
+	signal ifdEmpty, bufferValid, adrW_ready : std_logic; 	--to check when to finish the simulation
 	signal rf_a, rf_b : std_logic_vector(31 downto 0);
 	
 	--signal lastCyclesData : std_logic_vector(31 downto 0); --used in instr_check
@@ -101,12 +101,12 @@ begin
 	
 	
 	--instantiates the DUT
-	circ : entity work.circuit(elasticBasic_delayedResultWriteback) 
+	circ : entity work.circuit(elasticBasic_delayedResult3) 
 			port map(	reset, clk, 
 						IFDready,	-- ready
 						dataValid,	-- pValid
 						data, 
-						currentInstruction, resOut, resValid, ifdEmpty,
+						currentInstruction, resOut, resValid, ifdEmpty, bufferValid, adrW_ready,
 						rf_a, rf_b);
 	
 	
