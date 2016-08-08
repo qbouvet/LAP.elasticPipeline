@@ -29,6 +29,8 @@ architecture elasticBasic of TB_circuit is
 	
 	signal ifdEmpty : std_logic; 	--to check when to finish the simulation
 	
+	signal rf_a, rf_b : std_logic_vector(31 downto 0);
+	
 begin
 
 		 
@@ -102,7 +104,8 @@ begin
 						IFDready,	-- ready
 						dataValid,	-- pValid
 						data, 
-						currentInstruction, resOut, resValid, ifdEmpty);
+						currentInstruction, resOut, resValid, ifdEmpty,
+						rf_a, rf_b);
 	
 	
 	-- ticks the clock
