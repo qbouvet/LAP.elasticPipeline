@@ -67,7 +67,7 @@ begin
 			newline;print("simulation started");
 			newline;print("basic data tests");
 			-- addi test
-			oc <= X"00000" & "000000100000"; -- op0-addi		
+			oc <= X"00000" & "000000000000"; -- op0-addi		
 			argA <= X"00000001";
 			argI <= X"00000002";
 			nReady <= '1';
@@ -79,7 +79,7 @@ begin
 			resetSim;
 			
 			--op1 test
-			oc <= X"00000" & "000001000000"; -- op1
+			oc <= X"00000" & "000001100000"; -- op1
 			argB <= X"00000001";
 			argA <= X"00000002";
 			nReady <= '1';
@@ -231,17 +231,17 @@ begin
 		res0 <= X"00000001";
 		res1 <= X"00000002";
 		waitPeriod(1);
-		oc <= "00000000000000000000000000100000";
+		oc <= "00000000000000000000000000000000";
 		waitPeriod(1);
 		assert res=res0;
-		oc <= "00000000000000000000000001000000";
+		oc <= "00000000000000000000000001100000";
 		waitPeriod(1);
 		assert res=res1;
 		
 		resetSim;
 		res0 <= X"00000001";
 		res1 <= X"00000002";
-		oc <= "00000000000000000000000000100000";
+		oc <= "00000000000000000000000000000000";
 		
 		print("control signals tests");
 		-- NB 'valid0 depends only on wether the previous data is valid

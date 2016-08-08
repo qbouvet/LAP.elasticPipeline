@@ -31,9 +31,9 @@ begin
 	begin
 		case oc(5) is 
 			-- immediate instruction (addi)
-			when '1' => res <= res0;
+			when '0' => res <= res0;
 			-- other instructions
-			when '0' => 
+			when '1' => 
 				case oc(6) is	
 					when '1' => res <= res1;
 					when others => res <= (others => 'U');
