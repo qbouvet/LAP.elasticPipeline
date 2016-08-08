@@ -1,21 +1,11 @@
 ------------------------------------------------------------------------------------------------------------
 TODO	
 			
-	make a generic version of join if we ever want to have more than 2 instructions
-			
 	implement the "merge" and ""branch"
 			what's the difference between join and merge ? what's the branch ? 
 					-> branch <-> demultiplexer
-	
-	
-	
-	
-	try stuff with the circuit(a) (mostly allows to test if the control signals work correctly when stalling)
-			NB :  what can we actually do ? cf NOTES
-			add 3 buffers just after the OP unuit and check if IFD stall alright		-> alright
-					fix delayChannel (buffers output array is enumerated in the wrong order somehow) 
-			fix the infinite loop at the end in the "single delay buffer" version of the circuit 
-	
+					
+	make a generic version of join if we ever want to have more than 2 instructions
 	
 	do a version of the circuit with elasticBuffers (complex version)
 			pipeline OP unit - test OP unit 
