@@ -144,7 +144,7 @@ begin
 	
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
-						adrB, adrA, awbOut, opResult, 
+						adrB, adrA, awbOut, wdbOut, 
 						(IFDvalidArray(4 downto 3), awbValid, wdbValid),-- pValidArray
 						OPUreadyArray(3 downto 2), 					-- nReadyArray
 						operandA, operandB, 
