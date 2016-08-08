@@ -1,6 +1,15 @@
 ------------------------------------------------------------------------------------------------------------
 TODO	
 
+	try stuff with the circuit(a) (mostly allows to test if the control signals work correctly when stalling)
+			do a delay channel version with oc
+					debug "delayed oc" version
+			do a delay channel version with adrW
+			
+	make instructions simpler + make it so that (others => '0') is addi r0 r0 r0 to avoid 'X' shitty stuff in simulations
+	change RF's join to generic version
+	remove debug signals from circuit.vhd (rf_a, rf_b)
+			
 	implement the "merge" and ""branch"
 			what's the difference between join and merge ? what's the branch ? 
 					-> branch <-> demultiplexer
@@ -11,7 +20,6 @@ TODO
 					fix delayChannel (buffers output array is enumerated in the wrong order somehow) 
 			fix the infinite loop at the end in the "single delay buffer" version of the circuit 
 	
-	make instructions simpler + make it so that (others => '0') is addi r0 r0 r0 to avoid 'X' shitty stuff in simulations
 	
 	do a version of the circuit with elasticBuffers (complex version)
 			pipeline OP unit - test OP unit 
@@ -78,6 +86,7 @@ DONE
 			add 3 buffers just after the OP unuit and check if IFD stall alright		-> alright
 					fix delayChannel (buffers output array is enumerated in the wrong order somehow) 
 			add 1 buffer to delay the result arrival to the register file for writeback
+					debug the "1 buffer" version	
 	
 	do a version of the ciruit with elastic components (simple version, no buffers)	
 			changed data providing process
