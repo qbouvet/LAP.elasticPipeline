@@ -91,8 +91,7 @@ end elasticBasic;
 -- added a delayChannel after the OPunit, so that the result (both 
 -- output in the testbench and for writeback into the register file)
 -- is delayed by 3 cycles
--- should make the pipeline stall for 3 cycles at start, since the 
--- registerFile will wait on data to write
+-- should stall for 3 cycles at every instruction
 ------------------------------------------------------------------------
 architecture elasticBasic_delayedResult3 of circuit is
 	
@@ -173,6 +172,7 @@ end elasticBasic_delayedResult3;
 -- based on the elasticBasic implementation.
 -- added an elastic buffer to delay the arrival of the OPresult to the
 -- register file for writeback
+-- should stall every other cycle
 ------------------------------------------------------------------------
 architecture elasticBasic_delayedResult1 of circuit is
 	
