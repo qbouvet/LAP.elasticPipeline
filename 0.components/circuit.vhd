@@ -174,7 +174,7 @@ end elasticBasic_delayedResult3;
 -- added an elastic buffer to delay the arrival of the OPresult to the
 -- register file for writeback
 ------------------------------------------------------------------------
-architecture elasticBasic_delayedResultWriteback of circuit is
+architecture elasticBasic_delayedResult1 of circuit is
 	
 	--output and control signals of the IFD
 	signal adrA, adrB, adrW, argI, oc : std_logic_vector(31 downto 0);
@@ -211,7 +211,7 @@ begin
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
 						adrB, adrA, adrW, opResult, 
-						(IFDvalidArray(4 downto 2), ebReady),-- pValidArray
+						(IFDvalidArray(4 downto 2), ebValid),-- pValidArray
 						OPUreadyArray(3 downto 2), 					-- nReadyArray
 						operandA, operandB, 
 						RFreadyArray, 								-- readyArray
@@ -240,4 +240,4 @@ begin
 	resOut <= ebOut;
 	resValid <= ebValid;
 						
-end elasticBasic_delayedResultWriteback;
+end elasticBasic_delayedResult1;
