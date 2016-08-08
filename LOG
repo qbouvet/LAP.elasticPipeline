@@ -1,7 +1,6 @@
 ------------------------------------------------------------------------------------------------------------
 TODO	
 			
-	make instructions simpler + make it so that (others => '0') is addi r0 r0 r0 to avoid 'X' shitty stuff in simulations
 	make a generic version of join if we ever want to have more than 2 instructions
 			
 	implement the "merge" and ""branch"
@@ -78,6 +77,7 @@ NOTES
 ------------------------------------------------------------------------------------------------------------
 DONE
 
+	make instructions simpler + make it so that (others => '0') is addi r0 r0 r0 to avoid 'X' shitty stuff in simulations
 	fix RF's port map's ordering
 	remove debug signals from circuit.vhd (rf_a, rf_b)
 	
