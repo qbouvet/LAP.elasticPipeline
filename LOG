@@ -2,11 +2,14 @@
 TODO	
 			
 	make instructions simpler + make it so that (others => '0') is addi r0 r0 r0 to avoid 'X' shitty stuff in simulations
-	make a generic version of join if we ever want to have more tan 2 instructions
+	make a generic version of join if we ever want to have more than 2 instructions
 			
 	implement the "merge" and ""branch"
 			what's the difference between join and merge ? what's the branch ? 
 					-> branch <-> demultiplexer
+	
+	
+	
 	
 	try stuff with the circuit(a) (mostly allows to test if the control signals work correctly when stalling)
 			NB :  what can we actually do ? cf NOTES
