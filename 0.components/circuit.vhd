@@ -3,7 +3,7 @@
 -- implementation of the circuit described in cortadella's papers
 -- architectures : 	- elasticBasic
 --
--- test versions :	- elasticBasic_delayedResultWriteback
+-- test versions :	- elasticBasic_delayedResult1
 -- 					- elasticBasic_delayedResult3
 -- 					- elasticBasic_delayedOc3
 -- 					- elasticBasic_delayedAdrW1
@@ -188,7 +188,7 @@ end elasticBasic_delay1AdrWandWrdata;
 -- 		-> normal, since we don't have a buffer to store the result 
 --		   before it's written in the register file
 ------------------------------------------------------------------------
-architecture elasticBasic_delayAdrW1 of circuit is
+architecture elasticBasic_delayedAdrW1 of circuit is
 	
 	--output and control signals of the IFD
 	signal adrA, adrB, adrW, argI, oc : std_logic_vector(31 downto 0);
@@ -251,7 +251,7 @@ begin
 	resOut <= opResult;
 	resValid <= OPUresultValid;
 						
-end elasticBasic_delayAdrW1;
+end elasticBasic_delayedAdrW1;
 
 
 

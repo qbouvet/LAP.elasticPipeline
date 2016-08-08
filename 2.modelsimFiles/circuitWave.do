@@ -9,8 +9,6 @@ add wave -noupdate /tb_circuit/IFDready
 add wave -noupdate /tb_circuit/data
 add wave -noupdate /tb_circuit/dataValid
 add wave -noupdate /tb_circuit/currentInstruction
-add wave -noupdate -radix decimal /tb_circuit/rf_a
-add wave -noupdate -radix decimal /tb_circuit/rf_b
 add wave -noupdate -radix decimal /tb_circuit/resOut
 add wave -noupdate /tb_circuit/resValid
 TreeUpdate [SetDefaultTree]
