@@ -16,9 +16,9 @@ use work.customTypes.all;
 entity branch is port(
 	condition,
 	pValid : in std_logic;
-	nReady : in bitArray_t(1 downto 0);
-	validArray : out std_logic;
-	ready : out std_logic_vector(31 downto 0));
+	nReadyArray : in bitArray_t(1 downto 0);
+	validArray : out std_logic_vector(31 downto 0);
+	ready : out std_logic);
 end branch;
 
 architecture vanilla of branch is
@@ -26,11 +26,11 @@ architecture vanilla of branch is
 begin
 	
 	-- only one branch can announce ready, according to condition
-	validArray(0) <= (not condition) and valid;		
-	validArray(1) <= condition and valid;
+	validArray(0) <= (not condition) and pValid;		
+	validArray(1) <= condition and pValid;
 	
-	ready <= 	(readyArray(0) and not condition) -- 	branch0 decides the ready signal if condition is '0'
-			 or	(readyArray(1) and condition)	  -- or	branch1 decides the ready signal if condition is '1'
+	ready <= 	(nReadyArray(0) and not condition)-- 	branch0 decides the ready signal if condition is '0'
+			 or	(nReadyArray(1) and condition);	  -- or	branch1 decides the ready signal if condition is '1'
 		--	 or	(readyArray(0) and readyArray(1)) -- or ready='1' if all branches are ready
 		-- but one of the conditions above is necessarily true if the last one is true -> useless
 		
