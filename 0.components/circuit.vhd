@@ -20,7 +20,7 @@ entity circuit is port(
 	dataValid : in std_logic;
 	data : in std_logic_vector(31 downto 0);
 	instrOut, resOut : out std_logic_vector(31 downto 0); 	-- to allow us to look what's going on inside during tests
-	resValid : out std_logic); 								--idem
+	resValid, ifdEmpty : out std_logic); 					-- idem + to decide when to finish the simulation
 end circuit;
 
 
