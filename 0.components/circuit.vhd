@@ -2,10 +2,12 @@
 ------------------------------------------------------------------------
 -- implementation of the circuit described in cortadella's papers
 -- architectures : 	- elasticBasic
---					- elasticBasic_delayedResultWriteback
+--
+-- test versions :	- elasticBasic_delayedResultWriteback
 -- 					- elasticBasic_delayedResult3
 -- 					- elasticBasic_delayedOc3
 -- 					- elasticBasic_delayedAdrW1
+--					- elasticBasic_delay1AdrWandWrdata
 ------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
@@ -17,9 +19,8 @@ entity circuit is port(
 	IFDready : out std_logic;
 	dataValid : in std_logic;
 	data : in std_logic_vector(31 downto 0);
-	instrOut, resOut : out std_logic_vector(31 downto 0); -- to allow us to look what's going on inside during tests
-	resValid,ifdEmpty : out std_logic;	--same
-	rf_a, rf_b: out std_logic_vector(31 downto 0)); --same
+	instrOut, resOut : out std_logic_vector(31 downto 0); 	-- to allow us to look what's going on inside during tests
+	resValid : out std_logic); 								--idem
 end circuit;
 
 
@@ -54,8 +55,8 @@ begin
 						(RFreadyArray(3 downto 1), OPUreadyArray(1 downto 0)),	-- nReadyArray
 						IFDready, 					-- ready
 						IFDvalidArray,				-- ValidArray
-						instrOut,	-- outputs the instruction for observation purpose
-						ifdEmpty);	-- for simulation purpose, decides when to stop the sim
+						instrOut,	-- outputs the currentl instruction for observation purpose
+						ifdEmpty);	-- allows to decide when to stop the simulation
 	
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
@@ -76,14 +77,14 @@ begin
 						OPUresultValid,								-- valid
 						OPUreadyArray);
 						
-	rf_a <= operandA;	-- for debug
-	rf_b <= operandB;
-						
 	-- signals for observation purpose
 	resOut <= opResult;
 	resValid <= OPUresultValid;
 						
 end elasticBasic;
+
+
+
 
 
 
@@ -139,7 +140,7 @@ begin
 						IFDready, 					-- ready
 						IFDvalidArray,				-- ValidArray
 						instrOut,	-- outputs the instruction for observation purpose
-						ifdEmpty);	-- for simulation purpose, decides when to stop the sim
+						ifdEmpty);	-- allows us to stop the simulation
 	
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
@@ -171,10 +172,6 @@ begin
 						opResult, wdbOut,
 						OPUresultValid, RFreadyArray(0),	-- pValid, nReady
 						wdbReady, wdbValid);				-- ready, valid
-	
-	-- for debug	
-	rf_a <= operandA;
-	rf_b <= operandB;
 						
 	-- signals for observation purpose
 	resOut <= opResult;
@@ -249,10 +246,6 @@ begin
 						adrW, ebOut,
 						IFDvalidArray(2), RFreadyArray(1),	-- pValid, nReady
 						ebReady, ebValid);					-- ready, valid
-					
-	-- for debug	
-	rf_a <= operandA;
-	rf_b <= operandB;
 						
 	-- signals for observation purpose
 	resOut <= opResult;
@@ -328,10 +321,6 @@ begin
 						IFDvalidArray(0),
 						OPUreadyArray(0),
 						delayChannelReady);
-						
-						
-	rf_a <= operandA;	-- for debug
-	rf_b <= operandB;
 						
 	-- signals for observation purpose
 	resOut <= opResult;
@@ -410,9 +399,6 @@ begin
 						OPUresultValid, RFreadyArray(0),
 						delayChannelReady);
 						
-	rf_a <= operandA;	-- for debug
-	rf_b <= operandB;
-						
 	-- signals for observation purpose
 	resOut <= delayChannelOutput(3);
 	resValid <= delayChannelValidArray(3);
@@ -485,9 +471,6 @@ begin
 						opResult, ebOut,
 						OPUresultValid, RFreadyArray(0),
 						ebReady, ebValid);
-						
-	rf_a <= operandA;	-- for debug
-	rf_b <= operandB;
 						
 	-- signals for observation purpose
 	resOut <= ebOut;
