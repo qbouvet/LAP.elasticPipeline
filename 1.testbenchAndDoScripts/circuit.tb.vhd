@@ -101,7 +101,7 @@ begin
 	
 	
 	--instantiates the DUT
-	circ : entity work.circuit(elasticBasic_delayedResult1) 
+	circ : entity work.circuit(elasticBasic_delayedOc3) 
 			port map(	reset, clk, 
 						IFDready,	-- ready
 						dataValid,	-- pValid
