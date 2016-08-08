@@ -17,8 +17,117 @@ entity circuit is port(
 	data : in std_logic_vector(31 downto 0);
 	instrOut, resOut : out std_logic_vector(31 downto 0); -- to allow us to look what's going on inside during tests
 	resValid,ifdEmpty : out std_logic;	--same
-	rf_a, rf_b: out std_logic_vector(31 downto 0)); --same
+	rf_a, rf_b: out std_logic_vector(31 downto 0); --same
+	delayChannelValid, OPunit_ready_oc : out std_logic);
 end circuit;
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------
+-- based on elasticBasic implementation
+-- delay the oc by 3 cycles
+-- should stall for 3 cycles at every instuction
+------------------------------------------------------------------------
+architecture elasticBasic_delayedOc3 of circuit is
+	
+	--output and control signals of the IFD
+	signal adrA, adrB, adrW, argI, oc : std_logic_vector(31 downto 0);
+	signal IFDvalidArray : bitArray_t(4 downto 0);
+	-- result of the operation, for writeback
+	signal opResult : std_logic_vector(31 downto 0);
+	-- registerFile control signals
+	signal RFreadyArray : bitArray_t(3 downto 0);
+	signal RFvalidArray : bitArray_t(1 downto 0);
+	signal RFreadyForWrdata : std_logic;
+	-- registerFile output
+	signal operandA, operandB : std_logic_vector(31 downto 0);	
+	--OP unit control signals
+	signal OPUresultValid : std_logic;
+	signal OPUreadyArray : bitArray_t(3 downto 0);
+	
+	--signals for the delay channel
+	signal delayChannelOutput : vectorArray_t(3 downto 0)(31 downto 0);
+	signal delayChannelValidArray : bitArray_t(3 downto 0);
+	signal delayChannelReady : std_logic;
+	
+begin
+
+	instructionFetchedDecoder : entity work.instructionFetcherDecoder(elastic) 
+			port map(	clk, reset, 
+						data, 						-- instr_in
+						adrB, adrA, adrW, argI, oc, 
+						dataValid,					-- pValid
+						(RFreadyArray(3 downto 1), OPUreadyArray(1), delayChannelReady),	-- nReadyArray
+						IFDready, 					-- ready
+						IFDvalidArray,				-- ValidArray
+						instrOut,	-- outputs the instruction for observation purpose
+						ifdEmpty);	-- for simulation purpose, decides when to stop the sim
+	
+	regFile : entity work.registerFile(elastic)
+			port map(	clk, reset, 
+						adrB, adrA, adrW, opResult, 
+						(IFDvalidArray(4 downto 2), OPUresultValid),-- pValidArray
+						OPUreadyArray(3 downto 2), 					-- nReadyArray
+						operandA, operandB, 
+						RFreadyArray, 								-- readyArray
+						RFvalidArray);								-- validArray
+	
+	OPU : entity work.OPunit(elasticEagerFork)
+			port map(	clk, reset,
+						operandB, operandA, argI, oc, 
+						opResult, 
+						(RFvalidArray, IFDvalidArray(1), delayChannelValidArray(3)),	-- pValidArray
+						RFreadyArray(0), 							-- nReady
+						OPUresultValid,								-- valid
+						OPUreadyArray);
+						
+	dc : entity work.delayChannel(vanilla) generic map(32, 3)
+			port map(	clk, reset, 
+						oc, delayChannelOutput,
+						delayChannelValidArray,
+						IFDvalidArray(0),
+						OPUreadyArray(0),
+						delayChannelReady);
+						
+	--for debug
+	delayChannelValid <= delayChannelValidArray(3);
+	OPunit_ready_oc <= OPUreadyArray(0);
+						
+	-- for debug
+	rf_a <= operandA;	
+	rf_b <= operandB;
+						
+	-- signals for observation purpose
+	resOut <= opResult;
+	resValid <= OPUresultValid;
+						
+end elasticBasic_delayedOc3;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -89,87 +198,15 @@ end elasticBasic;
 
 
 
+
+
+
+
+
+
 ------------------------------------------------------------------------------------------------ test implementations
 ------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------
-
-
-------------------------------------------------------------------------
--- based on elasticBasic implementation
--- delay the oc by 3 cycles
--- should stall for 3 cycles at every instuction
-------------------------------------------------------------------------
-architecture elasticBasic_delayedOc3 of circuit is
-	
-	--output and control signals of the IFD
-	signal adrA, adrB, adrW, argI, oc : std_logic_vector(31 downto 0);
-	signal IFDvalidArray : bitArray_t(4 downto 0);
-	-- result of the operation, for writeback
-	signal opResult : std_logic_vector(31 downto 0);
-	-- registerFile control signals
-	signal RFreadyArray : bitArray_t(3 downto 0);
-	signal RFvalidArray : bitArray_t(1 downto 0);
-	signal RFreadyForWrdata : std_logic;
-	-- registerFile output
-	signal operandA, operandB : std_logic_vector(31 downto 0);	
-	--OP unit control signals
-	signal OPUresultValid : std_logic;
-	signal OPUreadyArray : bitArray_t(3 downto 0);
-	
-	--signals for the delay channel
-	signal delayChannelOutput : vectorArray_t(3 downto 0)(31 downto 0);
-	signal delayChannelValidArray : bitArray_t(3 downto 0);
-	signal delayChannelReady : std_logic;
-	
-begin
-
-	instructionFetchedDecoder : entity work.instructionFetcherDecoder(elastic) 
-			port map(	clk, reset, 
-						data, 						-- instr_in
-						adrB, adrA, adrW, argI, oc, 
-						dataValid,					-- pValid
-						(RFreadyArray(3 downto 1), OPUreadyArray(1), delayChannelReady),	-- nReadyArray
-						IFDready, 					-- ready
-						IFDvalidArray,				-- ValidArray
-						instrOut,	-- outputs the instruction for observation purpose
-						ifdEmpty);	-- for simulation purpose, decides when to stop the sim
-	
-	regFile : entity work.registerFile(elastic)
-			port map(	clk, reset, 
-						adrB, adrA, adrW, opResult, 
-						(IFDvalidArray(4 downto 2), OPUresultValid),-- pValidArray
-						OPUreadyArray(3 downto 2), 					-- nReadyArray
-						operandA, operandB, 
-						RFreadyArray, 								-- readyArray
-						RFvalidArray);								-- validArray
-	
-	OPU : entity work.OPunit(elasticEagerFork)
-			port map(	clk, reset,
-						operandB, operandA, argI, oc, 
-						opResult, 
-						(RFvalidArray, IFDvalidArray(1), delayChannelValidArray(3)),	-- pValidArray
-						RFreadyArray(0), 							-- nReady
-						OPUresultValid,								-- valid
-						OPUreadyArray);
-						
-	dc : entity work.delayChannel(vanilla) generic map(32, 3)
-			port map(	clk, reset, 
-						oc, delayChannelOutput,
-						delayChannelValidArray,
-						IFDvalidArray(0),
-						OPUreadyArray(0),
-						delayChannelReady);
-						
-						
-	rf_a <= operandA;	-- for debug
-	rf_b <= operandB;
-						
-	-- signals for observation purpose
-	resOut <= opResult;
-	resValid <= OPUresultValid;
-						
-end elasticBasic_delayedOc3;
-
   
   
   

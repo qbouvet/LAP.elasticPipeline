@@ -59,7 +59,7 @@ begin
 	
 	
 	-- map the delayed data and control output signals to the intermediate signals linking the buffers	
-	process(data, data_in, clk, reset, p_valid)
+	process(data, data_in, clk, reset, p_valid, buffer_valid)
 	begin
 		data_out(0) <= data_in;
 		valid(0) <= p_valid;

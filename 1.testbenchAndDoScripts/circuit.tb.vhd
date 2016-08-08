@@ -30,8 +30,8 @@ architecture elasticBasic of TB_circuit is
 	signal ifdEmpty : std_logic; 	--to check when to finish the simulation
 	signal rf_a, rf_b : std_logic_vector(31 downto 0);
 	
-	--signal lastCyclesData : std_logic_vector(31 downto 0); --used in instr_check
-	--signal skippedInstructionFetch : std_logic; -- for debug
+	-- for debug
+	signal delayChannelValid, OPunit_ready_oc : std_logic;
 	
 begin
 
@@ -107,7 +107,8 @@ begin
 						dataValid,	-- pValid
 						data, 
 						currentInstruction, resOut, resValid, ifdEmpty,
-						rf_a, rf_b);
+						rf_a, rf_b, 
+						delayChannelValid, OPunit_ready_oc);
 	
 	
 	-- ticks the clock
