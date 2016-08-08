@@ -1,28 +1,28 @@
 ------------------------------------------------------------------------------------------------------------
 TODO	
-			
+	
 	implement the "merge" and ""branch"
-			what's the difference between join and merge ? what's the branch ? 
-					-> branch <-> demultiplexer
-					
-	make a generic version of join if we ever want to have more than 2 instructions
+			test merge2 and branch2
+			(think of a size generic implementation) (+test it)
+			
+	Use the merge and branch
+			replace joins and forks in the 1st version of the circuit				
 	
-	do a version of the circuit with elasticBuffers (complex version)
-			pipeline OP unit - test OP unit 
-			add elastic control signal sto register file
-			change IFD to be combinatorial and double check changes on this one
-	
-	is DD unit ok ?
-	analyse performance
-	memory bypass		-> need antitokens to be useful
-	discuss eager join to find error in the design
+	make second version of the circuit
+			implement memory bypass + dependancy resolution unit
+
+	make third version of the circuit
+			implement the new "result selector"
 	
 	think/read about antitoken channel issuse	
 	implement the latch version of elasticBuffer for comparison
 	debug the rest of the early evaluation multiplexer
 	
+	
+	
+whenever
+	make a generic version of join if we ever want to have more than 2 instructions
 	document stuff
-
 
 
 
@@ -66,6 +66,11 @@ NOTES
 
 ------------------------------------------------------------------------------------------------------------
 DONE
+
+	implement the "merge" and "branch"
+			implement simple merge2 and branch2
+	
+-------------------- finished first version of the circuit
 
 	make instructions simpler + make it so that (others => '0') is addi r0 r0 r0 to avoid 'X' shitty stuff in simulations
 	fix RF's port map's ordering
