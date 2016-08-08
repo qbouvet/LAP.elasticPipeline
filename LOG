@@ -1,6 +1,13 @@
 ------------------------------------------------------------------------------------------------------------
 TODO	
 
+	try stuff with the circuit(a) (mostly allows to test if the control signals work correctly when stalling)
+					debug the "1 buffer" version	
+			do a delay channel version with oc or argI
+			
+	make instructions simpler + make it so that (others => '0') is addi r0 r0 r0 to avoid 'X' shitty stuff in simulations
+	change RF's join to generic version
+			
 	implement the "merge" and ""branch"
 			what's the difference between join and merge ? what's the branch ? 
 					-> branch <-> demultiplexer
@@ -11,7 +18,6 @@ TODO
 					fix delayChannel (buffers output array is enumerated in the wrong order somehow) 
 			fix the infinite loop at the end in the "single delay buffer" version of the circuit 
 	
-	make instructions simpler + make it so that (others => '0') is addi r0 r0 r0 to avoid 'X' shitty stuff in simulations
 	
 	do a version of the circuit with elasticBuffers (complex version)
 			pipeline OP unit - test OP unit 
