@@ -16,11 +16,11 @@ use work.customTypes.all;
 entity registerFile is port(
 	clk, reset : in std_logic;
 	adrB, adrA, adrW, wrData : in std_logic_vector(31 downto 0);
-	pValidArray : in bitArray_t(3 downto 0); -- adrA, adrB, adrW, wrData
+	pValidArray : in bitArray_t(3 downto 0); -- adrB, adrA, adrW, wrData
 	nReadyArray : in bitArray_t(1 downto 0); -- a, b
 	
 	a, b  : out std_logic_vector(31 downto 0);	
-	readyArray : out bitArray_t(3 downto 0); -- adrA, adrB, adrW, wrData
+	readyArray : out bitArray_t(3 downto 0); -- adrB, adrA, adrW, wrData
 	validArray : out bitArray_t(1 downto 0)	 -- a, b
 );
 end registerFile;

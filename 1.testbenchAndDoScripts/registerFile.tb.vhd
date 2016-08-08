@@ -153,7 +153,7 @@ begin
 	-- design under test
 	DUT : entity work.registerFile(elastic) port map (
 		clk, reset, 
-		adrA, adrB, adrW, wrData,
+		adrB, adrA, adrW, wrData,
 		pValidArray,
 		nReadyArray,
 		a, b,
