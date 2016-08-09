@@ -19,7 +19,65 @@ package customTypes is
 	-- data type used in the register file
 	type register_t is array(63 downto 0) of std_logic_vector(31 downto 0);
 	
+	
+	
 end package;
 
 
 
+---------------------------------------------------  testbenchCommons
+---------------------------------------------------------------------
+-- This package contains common code to most testbenches, such as 
+-- signal declarations for clk, reset ... ; waiting and test output 
+-- procedures ; 
+---------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_textio.all;
+use std.textio.all;
+use work.customTypes.all;
+
+package testbenchCommons is
+	--signals
+	signal clk : std_logic := '0';
+	signal reset : std_logic;
+	signal finished    : boolean := false;
+    signal currenttime : time    := 0 ns;	
+	constant CLK_PERIOD : time := 10 ns;	
+	
+	--wait procedures prototypes
+	procedure waitPeriod;
+	procedure waitPeriod(constant i : in real);
+	procedure waitPeriod(constant i : in integer);
+	
+	-- text output procedures variables declarations and prototypes	
+	procedure newline;
+	procedure print(msg : in string);
+end testbenchCommons;
+
+package body testbenchCommons is
+
+	--waiting procedures		
+	procedure waitPeriod is
+	begin	wait for CLK_PERIOD;
+	end procedure;		
+	procedure waitPeriod(constant i : in real) is
+	begin	wait for i * CLK_PERIOD;
+	end procedure;		
+	procedure waitPeriod(constant i : in integer) is
+	begin 	wait for i * CLK_PERIOD;
+	end procedure;	
+	
+	--text output procedures
+	procedure newline is
+		variable console_out : line;
+	begin	console_out := new string'("");
+			writeline(output, console_out);
+	end procedure newline;
+	procedure print(msg : in string) is
+		variable console_out : line;
+	begin	console_out := new string'(msg);
+			writeline(output, console_out);
+	end procedure print;
+	
+end testbenchCommons;
