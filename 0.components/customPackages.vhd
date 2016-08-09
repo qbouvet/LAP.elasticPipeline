@@ -1,16 +1,28 @@
+---------------------------------------------------------------------
+-- customPackages.vhd
+--
+-- COMPILE WITH VHDL 2008.
+-- contains :	- custom types
+--				- code shared/used by most testbenchs
+--				- simple gates shared/used in several components (andN, orN)
+--
+--
+---------------------------------------------------------------------
+
+
+
 -------------------------------------------------------  customTypes
 ---------------------------------------------------------------------
--- customTypes are declared here (can't use array types directly in
--- entities' port
----------------------------------------------------------------------
+-- custom types are declared here 
 library ieee;
 use ieee.std_logic_1164.all;
 package customTypes is
 
 	-- array of vectors used especially with delay channels
-	type vectorArray_t is array (integer range <>) of std_logic_vector; -- data size and latency must be specified when used
+	type vectorArray_t is array (integer range <>) of std_logic_vector; -- (data size, latency) must be specified when used
 
-	-- array of bits useed mostly for grouping elastic control signals. used in many components. Almost an alias for std_logic_vector
+	-- array of bits useed mostly for grouping elastic control signals. 
+	-- An alias to std_logic_vector, used for clarity purpose. Probably could "search/replace" those if need be
 	type bitArray_t is array (integer range <>) of std_logic;
 
 	-- the address array used as input to the dependancy detection unit
@@ -27,23 +39,24 @@ end package;
 
 ---------------------------------------------------  testbenchCommons
 ---------------------------------------------------------------------
--- This package contains common code to most testbenches, such as 
--- signal declarations for clk, reset ... ; waiting and test output 
--- procedures ; 
----------------------------------------------------------------------
+-- contains code used in most testbenches :
+--		- signals declarations (clk, reset, finished...)
+--		- procedures (waiting, text output)
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_textio.all;
 use std.textio.all;
 use work.customTypes.all;
 
 package testbenchCommons is
-	--signals
+	-- usual testbench signals
 	signal clk : std_logic := '0';
 	signal reset : std_logic;
 	signal finished    : boolean := false;
     signal currenttime : time    := 0 ns;	
-	constant CLK_PERIOD : time := 10 ns;	
+	constant CLK_PERIOD : time := 10 ns;		
+	
+	-- useful for reasons
+	signal zero : std_logic_vector(31 downto 0) := (others => '0');
 	
 	--wait procedures prototypes
 	procedure waitPeriod;
@@ -80,4 +93,60 @@ package body testbenchCommons is
 			writeline(output, console_out);
 	end procedure print;
 	
+	--old/deprecated waiting procedure - for backup only, don't use
+	procedure waitForRising(signal sig : in std_logic; constant i : in integer) is
+	begin
+		for n in 1 to i loop
+			wait until rising_edge(sig);
+		end loop;
+	end procedure;
+	
 end testbenchCommons;
+
+
+
+
+-----------------------------------------------------------------  andN
+------------------------------------------------------------------------
+-- size-generic AND gate used in the size-generic lazy fork and join
+------------------------------------------------------------------------
+LIBRARY IEEE;
+USE ieee.std_logic_1164.all;
+use work.customTypes.all;
+
+ENTITY andN IS
+GENERIC (n : INTEGER := 4);
+PORT (	x : IN bitArray_t(N-1 downto 0);
+		res : OUT STD_LOGIC);
+END andN;
+
+ARCHITECTURE vanilla OF andn IS
+	SIGNAL dummy : bitArray_t(n-1 downto 0);
+BEGIN
+	dummy <= (OTHERS => '1');
+	res <= '1' WHEN x = dummy ELSE '0';
+END vanilla;
+
+
+
+
+-----------------------------------------------------------------  orN
+------------------------------------------------------------------------
+-- size-generic OR gate used in the size-generic eager fork and join
+------------------------------------------------------------------------
+LIBRARY IEEE;
+USE ieee.std_logic_1164.all;
+use work.customTypes.all;
+
+ENTITY orN IS
+GENERIC (n : INTEGER := 4);
+PORT (	x : IN bitArray_t(N-1 downto 0);
+		res : OUT STD_LOGIC);
+END orN;
+
+ARCHITECTURE vanilla OF orN IS
+	SIGNAL dummy : bitArray_t(n-1 downto 0);
+BEGIN
+	dummy <= (OTHERS => '0');
+	res <= '0' WHEN x = dummy ELSE '1';
+END vanilla;
