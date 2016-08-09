@@ -1,6 +1,9 @@
 -----------------------------------------------------------  tb_joinN
 ---------------------------------------------------------------------
 -- tests the size-generic version of join
+-- would need more tests than a size=2, but either will be added later,
+-- either will be directly tested in a circuit...
+-- -> tested in circuit
 ---------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;

@@ -4,14 +4,10 @@ TODO
 	change EB's control signals order
 	
 	implement the "merge" and ""branch"
-			test merge2 and branch2
 			(think of a size generic implementation) (+test it)
 			
 	Use the merge and branch
-			replace joins and forks in the 1st version of the circuit				
-	
-	make a generic version of join if we ever want to have more than 2 instructions
-			test generic join
+			replace joins and forks in the 1st version of the circuit		
 			
 	make second version of the circuit
 			implement memory bypass + dependancy resolution unit
@@ -72,7 +68,10 @@ NOTES
 DONE
 
 	implement the "merge" and "branch"
+			test merge2 and branch2
 			implement simple merge2 and branch2
+			
+	make+test a generic version of join if we ever want to have more than 2 instructions
 	
 -------------------- finished first version of the circuit
 

@@ -93,7 +93,7 @@ begin
 						readyArray(2),						-- ready
 						fork_validArray(1), fork_validArray(0));					-- validArray	
 	
-	addi : entity work.op0(forwarding)
+	addi : entity work.op0(delay3)
 			port map (	clk, reset,
 						argA, argI, 
 						res0, 

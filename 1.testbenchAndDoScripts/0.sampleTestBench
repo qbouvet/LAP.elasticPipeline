@@ -24,14 +24,21 @@ begin
 	begin
 	resetSim;
 	if(not finished)then 
+			
+		newline;print("simulation started");
+		
+		
 																		-- write simulation here
+		
+		
+		newline;print("simulation completed");
 	end if;
 	finished <= true;
 	end process;
 	
 	-- instantiate design under test
 	DUT : entity work.xxx 
-			port map( 	xxx )											-- do the port map
+			port map( 	xxx );											-- do the port map
 	
 	-- ticks the clock
 	clock : process

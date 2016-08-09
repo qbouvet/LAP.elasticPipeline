@@ -80,8 +80,8 @@ end op0;
 architecture forwarding of op0 is
 begin
 
-	joinArgs : entity work.join(cortadellas)
-			port map(pValidArray(0), pValidArray(1), nReady, valid, readyArray(0), readyArray(1));
+	joinArgs : entity work.joinN(vanilla) generic map(2)
+			port map(pValidArray, nReady, valid, readyArray);
 
 	addArgs : entity work.adder 
 			port map (a, b, res, open); --leave the carry open
@@ -100,11 +100,11 @@ architecture delay3 of op0 is
 	signal channelReady : std_logic;
 begin
 
-	joinArgs : entity work.join(cortadellas)
-			port map(	pValidArray(0), pValidArray(1), 	--pValidArray
-						channelReady, 						--nReady
-						tempresultValid, 					--valid
-						readyArray(0), readyArray(1));		--readyArray
+	joinArgs : entity work.joinN(vanilla) generic map(2)
+			port map(	pValidArray, 		--pValidArray
+						channelReady, 		--nReady
+						tempresultValid,	--valid
+						readyArray);		--readyArray
 
 	addArgs : entity work.adder 
 			port map (a, b, tempResult, open); --leave the carry open
@@ -152,8 +152,8 @@ architecture forwarding of op1 is
 	signal tempRes : std_logic_vector(31 downto 0);
 begin
 
-	joinArgs : entity work.join(cortadellas) -- we don't need a join3 since we use 2 times the same argument
-			port map(pValidArray(0), pValidArray(1), nReady, valid, readyArray(0), readyArray(1));
+	joinArgs : entity work.joinN(vanilla) generic map(2) -- we don't need a join3 since we use 2 times the same argument
+			port map(pValidArray, nReady, valid, readyArray);
 			
 	addArgs : entity work.adder 
 			port map(a, b, tempRes, open);
