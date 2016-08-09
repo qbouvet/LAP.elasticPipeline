@@ -126,52 +126,6 @@ end vanilla;
 
 
 
------------------------------------------------------------------  andN
-------------------------------------------------------------------------
--- size-generic AND gate used in the size-generic lazy fork
-------------------------------------------------------------------------
-LIBRARY IEEE;
-USE ieee.std_logic_1164.all;
-use work.customTypes.all;
-
-ENTITY andN IS
-GENERIC (n : INTEGER := 4);
-PORT (	x : IN bitArray_t(N-1 downto 0);
-		res : OUT STD_LOGIC);
-END andN;
-
-ARCHITECTURE vanilla OF andn IS
-	SIGNAL dummy : bitArray_t(n-1 downto 0);
-BEGIN
-	dummy <= (OTHERS => '1');
-	res <= '1' WHEN x = dummy ELSE '0';
-END vanilla;
-
------------------------------------------------------------------  orN
-------------------------------------------------------------------------
--- size-generic OR gate used in the size-generic eager fork
-------------------------------------------------------------------------
-LIBRARY IEEE;
-USE ieee.std_logic_1164.all;
-use work.customTypes.all;
-
-ENTITY orN IS
-GENERIC (n : INTEGER := 4);
-PORT (	x : IN bitArray_t(N-1 downto 0);
-		res : OUT STD_LOGIC);
-END orN;
-
-ARCHITECTURE vanilla OF orN IS
-	SIGNAL dummy : bitArray_t(n-1 downto 0);
-BEGIN
-	dummy <= (OTHERS => '0');
-	res <= '0' WHEN x = dummy ELSE '1';
-END vanilla;
-
-
-
-
-
 
 
 
@@ -180,9 +134,6 @@ END vanilla;
 
 
 ------------------------------------------------------------------------------------   non size-generic versions
-
-
-
 
 
 

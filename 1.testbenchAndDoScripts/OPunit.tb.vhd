@@ -91,7 +91,7 @@ begin
 			resetSim;
 			
 			newLine; print("control signals tests");
-			oc <= X"00000" & "000000100000"; -- op0-addi		
+			oc <= X"00000" & "000000000000"; -- op0-addi		
 			argA <= X"00000001";
 			argI <= X"00000002";
 			nReady <= '1';

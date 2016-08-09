@@ -83,16 +83,11 @@ begin
 	
 	-- instantiate design under test
 	DUT : entity work.delayChannel(vanilla) generic map(32, 3)
-			port map(clk, reset, d_in, d_out, valid, p_valid, n_ready, ready);
---			port(	clk, reset : in std_logic;
---				data_in : in std_logic_vector(DATA_SIZE-1 downto 0);
-				-- all the delayed outputs
---				data_out : out vectorArray_t(0 to DELAY)(DATA_SIZE-1 DOWNTO 0); -- we want data_out(0) to select the signal with 0 delay
-				--elastic control signals
---				valid : out bitArray_t(0 to DELAY); -- same as data_out
---				p_valid, n_ready : in std_logic;
---				ready : out std_logic
---			); 	
+			port map(	clk, reset, 
+						d_in, d_out, 
+						valid, 
+						p_valid, n_ready, 
+						ready);
 				
 	-- ticks the clock
 	clock : process

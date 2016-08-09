@@ -17,7 +17,7 @@ entity branch is port(
 	condition,
 	pValid : in std_logic;
 	nReadyArray : in bitArray_t(1 downto 0);
-	validArray : out std_logic_vector(31 downto 0);
+	validArray : out bitArray_t(1 downto 0);
 	ready : out std_logic);
 end branch;
 

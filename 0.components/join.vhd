@@ -28,6 +28,7 @@ end cortadellas;
 
 ---------------------------------------------------------------------
 -- the architecture that does not get ready when waiting on a pValid signal
+-- (worked well with eager forks ?)
 ---------------------------------------------------------------------
 architecture try of join is
 begin
@@ -42,10 +43,49 @@ end try;
 
 
 
+
+--------------------------------------------------------------  joinN
+---------------------------------------------------------------------
+-- generic version of Join block
+---------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use work.customTypes.all;
+
+entity joinN is generic (SIZE : integer);
+port (
+	pValidArray : in bitArray_t(SIZE-1 downto 0);
+	nReady : in std_logic;
+	valid : out std_logic;
+	readyArray : out bitArray_t(SIZE-1 downto 0));	
+end joinN;
+
+architecture vanilla of joinN is
+	signal allPValid : std_logic;
+begin
+	
+	allPValidAndGate : entity work.andN generic map(SIZE)
+			port map(	pValidArray,
+						allPValid);
+	
+	valid <= allPValid;
+	
+	process (pValidArray, allPValid, nReady)
+	begin
+	for i in 0 to SIZE-1 loop
+		readyArray(i) <= (not pValidArray(i)) or (allPValid and nReady);
+	end loop;
+	end process;
+			
+end vanilla;
+
+
+
+
 --------------------------------------------------------------  join3
 ---------------------------------------------------------------------
--- and adapted version of the join, based on the same logic 
--- equations, to join the control signals from 3 inputs
+-- and adapted version of the join, based on the same logic equations
+-- as cortadella's, to join the control signals from 3 inputs
 ---------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
@@ -58,7 +98,7 @@ port(	pValidArray : in bitArray_t(2 downto 0);
 		readyArray : out bitArray_t(2 downto 0));
 end join3;
 
-architecture lazy of join3 is
+architecture vanilla of join3 is
 		-- internal value for readybility
 	signal allPValid : std_logic;
 begin
@@ -71,5 +111,5 @@ begin
 	
 	allPValid <= (pValidArray(0) and pValidArray(1) and pValidArray(2));	
 	
-end lazy;
+end vanilla;
 		

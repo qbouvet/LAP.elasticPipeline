@@ -51,6 +51,10 @@ end vanilla;
 ---------------------------------------------------------------- OP unit
 ------------------------------------------------------------------------
 -- groups together the various operations we want + the selector block
+-- architectures : 	- elasticEagerFork
+--					- elastic
+--					- debug 1-4
+--					- elastic2 (debug)
 ------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
@@ -89,8 +93,9 @@ begin
 						readyArray(2),						-- ready
 						fork_validArray(1), fork_validArray(0));					-- validArray	
 	
-	addi : entity work.op0
-			port map (	argA, argI, 
+	addi : entity work.op0(forwarding)
+			port map (	clk, reset,
+						argA, argI, 
 						res0, 
 						(fork_validArray(0), pValidArray(1)),	--pValidArray
 						selector_readyArray(1), 				-- nReady
@@ -98,8 +103,9 @@ begin
 						op0_valid);								-- valid
 	(fork_nReadyArray(0), readyArray(1)) <= op0_readyArray;
 			
-	sampleOp1 : entity work.op1
-			port map (	argA, argB, 
+	sampleOp1 : entity work.op1(forwarding)
+			port map (	clk, reset,
+						argA, argB, 
 						res1, 
 						(fork_validArray(1), pValidArray(3)),	--p_valid_array
 						selector_readyArray(2), 				-- n_ready
@@ -139,7 +145,8 @@ begin
 						fork_validArray);					-- validArray	
 	
 	addi : entity work.op0
-			port map (	argA, argI, 
+			port map (	clk, reset,
+						argA, argI, 
 						res0, 
 						(fork_validArray(0), pValidArray(1)),	--pValidArray
 						selector_readyArray(1), 				-- nReady
@@ -148,7 +155,8 @@ begin
 	(fork_nReadyArray(0), readyArray(1)) <= op0_readyArray;
 			
 	sampleOp1 : entity work.op1
-			port map (	argA, argB, 
+			port map (	clk, reset, 
+						argA, argB, 
 						res1, 
 						(fork_validArray(1), pValidArray(3)),	--p_valid_array
 						selector_readyArray(2), 				-- n_ready
@@ -247,7 +255,8 @@ begin
 	fork_nReadyArray <= ( selector_readyArray(2), op0_readyArray(1));
 	
 	addi : entity work.op0
-			port map (	argA, argI, 
+			port map (	clk, reset, 
+						argA, argI, 
 						res0, 
 						(fork_validArray(0), pValidArray(1)),	--pValidArray
 						selector_readyArray(1), 				-- nReady
@@ -290,7 +299,8 @@ begin
 	op1_valid <= pValidArray(3);
 	
 	addi : entity work.op0
-			port map (	argA, argI, 
+			port map (	clk, reset, 
+						argA, argI, 
 						res0, 
 						(pValidArray(2), pValidArray(1)),	--pValidArray
 						selector_readyArray(1), 				-- nReady
@@ -372,7 +382,8 @@ begin
 						fork_validArray);
 						
 	addi : entity work.op0 
-			port map(	argA, argI,
+			port map(	clk, reset, 
+						argA, argI,
 						res0, 
 						(fork_validArray(0), pValidArray(1)),
 						selector_readyArray(1),
@@ -381,7 +392,8 @@ begin
 	(fork_nReadyArray(0), readyArray(1)) <= op0_readyArray;
 	
 	sample_op1 : entity work.op1 
-			port map(	argB, argA,
+			port map(	clk, reset, 
+						argB, argA,
 						res1, 
 						(fork_validArray(1), pValidArray(3)),
 						selector_readyArray(2),
