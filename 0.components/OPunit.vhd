@@ -22,7 +22,7 @@ architecture vanilla of selectorBlock is
 begin
 
 	-- a join3 handles control signals 
-	joinResAndOc : entity work.join3
+	joinResAndOc : entity work.joinN(vanilla) generic map(3)
 			port map (pValidArray, nReady, valid, readyArray);
 	
 	-- multiplexer for the data

@@ -48,11 +48,11 @@ begin
 	readyArray(2) <= nReadyArray(0);
 	
 	-- joins the write adress' and the write data's elastic control signals
-	wrJoin : entity work.join(cortadellas) 
-			port map(	pValidArray(1), pValidArray(0), 
+	wrJoin : entity work.joinN(vanilla) generic map(2) 
+			port map(	pValidArray(1 downto 0), 
 						'1', -- we can write once per clock cycle
 						wrJoin_ready,
-						readyArray(1), readyArray(0));
+						readyArray(1 downto 0));
 	
 	-- writes and resets
 	writes : process(reset, clk, adrW, pValidArray)
