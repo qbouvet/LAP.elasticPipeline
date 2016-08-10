@@ -1,121 +1,129 @@
 ------------------------------------------------------------------------------------------------------------
 TODO	
 	
-	change EB's control signals order
-	
-	implement the "merge" and ""branch"
-			(think of a size generic implementation) (+test it)
-			
-	Use the merge and branch
-			replace joins and forks in the 1st version of the circuit		
-			
-	make second version of the circuit
-			implement memory bypass + dependancy resolution unit
+implement and try the "merge" and ""branch" blocks
+		Use the merge and branch
+				make a version of OPunit that replaces fork/join with branch/merge		->		elegant replacement for the multiplexers at the end of the OPunit + allows removing the oc wire going to the end
+		
+make second version of the circuit
+		implement memory bypass + dependancy resolution unit
+				
+improve the branch/merge blocks
+		make a size-generic implementation
+				-> 	not really needed right now
+		make a branch implementation with control signals for the condition ?
+				-> 	since in our circuit, we would put it right after the register file, it would be "first in the path" with no elastic buffers 
+						between the instructionFetchedDecoder (source of both  'condition' and the RF's read addresses), hence stalling 
+						the register file would stall the condition, so there would not be any problem. 
+						data flows <-> condition flows.
+				-> 	in other uses, or modified versions of the circuit, that may be needed
 
-	make third version of the circuit
-			implement the new "result selector"
+branch/merge thoughts 
+		can they replace the early evaluation model that uses antitokens ? cf written stuff 
+				understand how the antitokens forwarding path work
+				discuss this with lana
+
+make third version of the circuit
+		implement the new "result selector"
 	
-	think/read about antitoken channel issuse	
-	implement the latch version of elasticBuffer for comparison
-	debug the rest of the early evaluation multiplexer
+think/read about antitoken channel issuse	
+implement the latch version of elasticBuffer for comparison
+debug the rest of the early evaluation multiplexer
 	
 	
 	
-whenever
+WHENEVER
 	document stuff
+	change EB's control signals order
 
 
 
 ------------------------------------------------------------------------------------------------------------
 NOTES  
 
-	circuit(a) : can you have instructions with different latency ?
-			-> when 2 results arrive at selector at the same time, need to select the correct one and stall the other
-			-> data can be reordered between very fast and very slow instructions, so would need to reorder the write addresses as well
-					-> do a similar delay path for the write addresses based on the opcode
-					-> and then, when 2 write addresses arrive at the same time at the register file, select&stall using the same component as the results
-		-> surely possible, but worth it ? (since the next version has memory bypasses and stuff that will handle the issue more efficitenly)
+registerFile : cant there be read/write issues ? i.e reading stuff that hasn't been written back yet and stuff ?
 
-	registerFile : cant there be read/write issues ? i.e reading stuff that hasn't been written back yet and stuff ?
-	
-	registerFile : can write once per clock -> as long as we use synchronous buffers, as if "always ready" ?
+registerFile : can write once per clock -> as long as we use synchronous buffers, as if "always ready" ?
 		
-	delayChannel -> what to do with control signals of the delayed outputs ? don't allow them to stall ?
-				is valid even necessary, since these buffers should pretty much move at every clock cycle ?
-						
-	join : is the (not p_valid) term necessary for the read signal ?
+delayChannel -> what to do with control signals of the delayed outputs ? don't allow them to stall ?
+			is valid even necessary, since these buffers should pretty much move at every clock cycle ?
+					
+join : is the (not p_valid) term necessary for the read signal ?
 	
 																			----------------------------
-
-	in this circuit, the only benefit we get is from the early evaluation, otherwise, pipeline is never going to stall ?
-		-> in THIS circuit. change the number of buffers on one of the functions, we'll stall but still have the ability 
-			to have swapped the operations and keep a correct circuit	
-	even with the early evaluation, it's never going to stall ? 
-		-> it is. recall that elastic systems are meant to allow functions to be interchangeable. if you have 2 functions of 
-			different length (with different number of buffers), then you'll have to stall at some point. 				
-	quel interet d'utiliser des elastic buffers pour stocker/delayer l'adresse et l'opcode ? cf control signals : always ready
-		-> for when we stall - cf join at the entrance of register file / possible stalling	
-	is the dependency detection unit right ? heavily relies ont the fact that 1 instr/cycle comes from the IFD
-		-> need to thange that	
-	what is the elastic buffer between the write and read steps ?
-		-> reminder that the register file needs to be elastic too	
-	what happens if the enable signal stops the shifting, but there's an incomming antitoken 
-		->  problem 
-		
-
+																			
+circuit(a) : can you have instructions with different latency ?
+		-> we can. the OPunit's selector will wait on both results since it uses a lazy join
+in this circuit, the only benefit we get is from the early evaluation, otherwise, pipeline is never going to stall ?
+	-> in THIS circuit. change the number of buffers on one of the functions, we'll stall but still have the ability 
+		to have swapped the operations and keep a correct circuit	
+even with the early evaluation, it's never going to stall ? 
+	-> it is. recall that elastic systems are meant to allow functions to be interchangeable. if you have 2 functions of 
+		different length (with different number of buffers), then you'll have to stall at some point. 				
+quel interet d'utiliser des elastic buffers pour stocker/delayer l'adresse et l'opcode ? cf control signals : always ready
+	-> for when we stall - cf join at the entrance of register file / possible stalling	
+is the dependency detection unit right ? heavily relies ont the fact that 1 instr/cycle comes from the IFD
+	-> need to thange that	
+what is the elastic buffer between the write and read steps ?
+	-> reminder that the register file needs to be elastic too	
+what happens if the enable signal stops the shifting, but there's an incomming antitoken 
+	->  problem 
+	
 
 ------------------------------------------------------------------------------------------------------------
-DONE
+DONE																															(read bottom-up)
 
-	implement the "merge" and "branch"
-			test merge2 and branch2
-			implement simple merge2 and branch2
+
+				remove joins from OPunit_operations and use a big join at the start of OPunit
+		Use the merge and branch
+		test merge2 and branch2
+		implement simple merge2 and branch2
+implement and try the "merge" and ""branch" blocks
 			
-	make+test a generic version of join if we ever want to have more than 2 instructions
+make+test a generic version of join if we ever want to have more than 2 instructions
 	
--------------------- finished first version of the circuit
+--------------------   finished first version of the circuit
 
-	make instructions simpler + make it so that (others => '0') is addi r0 r0 r0 to avoid 'X' shitty stuff in simulations
-	fix RF's port map's ordering
-	remove debug signals from circuit.vhd (rf_a, rf_b)
+make instructions simpler + make it so that (others => '0') is addi r0 r0 r0 to avoid 'X' shitty stuff in simulations
+fix RF's port map's ordering
+remove debug signals from circuit.vhd (rf_a, rf_b)
 	
-	try stuff with the circuit(a) (mostly allows to test if the control signals work correctly when stalling)
-			operations with different latencies work -> change the 'addi' operation architecture to addi(delay3) in OPunit.vhd (no dedicated implementation for this case)
-			do a non-stalling version
-			do a delay channel version with oc
-					debug "delayed oc" version
-			add 3 buffers just after the OP unit and check if IFD stalls		-> alright
-					fix delayChannel (buffers output array is enumerated in the wrong order somehow) 
-			add 1 buffer to delay the result arrival to the register file for writeback
-					debug the "1 buffer" version	
+		operations with different latencies work -> change the 'addi' operation architecture to addi(delay3) in OPunit.vhd (no dedicated implementation for this case)
+		do a non-stalling version
+				debug "delayed oc" version
+		do a delay channel version with oc
+				fix delayChannel (buffers output array is enumerated in the wrong order somehow) 
+		add 3 buffers just after the OP unit and check if IFD stalls		-> alright
+				debug the "1 buffer" version	
+		add 1 buffer to delay the result arrival to the register file for writeback
+try stuff with the circuit(a) (mostly allows to test if the control signals work correctly when stalling)
 	
-	do a version of the ciruit with elastic components (simple version, no buffers)	
-			changed data providing process
-			make size-generic eager fork
-			tested all components
-			debug OPunit
-			test join, test fork
-			change IFD and add control signals to it
-			do a fork5 for the IFD
-			add control signals to OP unit
-			do a good 3way join (for multiplexers)
-			add control signals to register file
+		changed data providing process
+		make size-generic eager fork
+		tested all components
+		debug OPunit
+		test join, test fork
+		change IFD and add control signals to it
+		do a fork5 for the IFD
+		add control signals to OP unit
+		do a good 3way join (for multiplexers)
+		add control signals to register file
+do a version of the ciruit with elastic components (simple version, no buffers)	
 	
-	*interrupted*  do a version of the circuit with elastic buffers
-			add delay channels for adresse and opcode in IFD
-			quick test delayChannel
-			make delayChannel
-
-			re-implement elasticBuffers with size-genericity
-			implement resolultion unit
+		add delay channels for adresse and opcode in IFD
+		quick test delayChannel
+		make delayChannel
+		re-implement elasticBuffers with size-genericity
+		implement resolultion unit
+*interrupted*  do a version of the circuit with elastic buffers
 	
-	understand the eager fork
-	implement fork 
-	test join (lazy)
-	testbench the antitoken channel
-	rework the antitoken channel architecture in regards to when the register stops shifting (based on data transiting instead of purely clock)
-	testbench for the antitoken channel's shift register
-	debugged antitoken channel's shift register
+understand the eager fork
+implement fork 
+test join (lazy)
+testbench the antitoken channel
+rework the antitoken channel architecture in regards to when the register stops shifting (based on data transiting instead of purely clock)
+testbench for the antitoken channel's shift register
+debugged antitoken channel's shift register
 
 
 
