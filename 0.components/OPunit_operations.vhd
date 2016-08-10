@@ -68,21 +68,22 @@ port(
 	clk, reset : in std_logic;
 	a, b : in std_logic_vector(31 downto 0);
 	res : out std_logic_vector(31 downto 0);
-	pValidArray : in bitArray_t(1 downto 0);
-	nReady : in std_logic;
-	readyArray : out bitArray_t(1 downto 0);
-	valid : out std_logic);
+	pValid, nReady : in std_logic;
+	ready, valid : out std_logic);
 end op0;
 
 ------------------------------------------------------------------------
 -- simple version with no buffers - ctl signals are forwarded through
+-- joining arguments' control signals is now done in the OP unit, once 
+-- for all operations
 ------------------------------------------------------------------------
 architecture forwarding of op0 is
 begin
 
-	joinArgs : entity work.joinN(vanilla) generic map(2)
-			port map(pValidArray, nReady, valid, readyArray);
-
+	-- control signals are forwarded
+	ready <= nReady;
+	valid <= pValid;
+	
 	addArgs : entity work.adder 
 			port map (a, b, res, open); --leave the carry open
 
@@ -91,34 +92,29 @@ end forwarding;
 ------------------------------------------------------------------------
 -- delay added artificially : result now goes through 3 buffers
 -- (delay channel of size 3)
+-- joining arguments' control signals is now done in the OP unit, once 
+-- for all operations
 ------------------------------------------------------------------------
 architecture delay3 of op0 is
 	signal tempResult : std_logic_vector(31 downto 0);
-	signal tempResultValid : std_logic;
 	signal channelOut : vectorArray_t(3 downto 0)(31 downto 0);
-	signal channeldataValid : bitArray_t(3 downto 0);
-	signal channelReady : std_logic;
+	signal channelValidArray : bitArray_t(3 downto 0);
 begin
-
-	joinArgs : entity work.joinN(vanilla) generic map(2)
-			port map(	pValidArray, 		--pValidArray
-						channelReady, 		--nReady
-						tempresultValid,	--valid
-						readyArray);		--readyArray
 
 	addArgs : entity work.adder 
 			port map (a, b, tempResult, open); --leave the carry open
-			
+	
+	-- control signals are transmitted via the delayChannel		
 	dc3 : entity work.delayChannel(vanilla) generic map(32, 3)
 			port map(	clk, reset,
 						tempResult,
 						channelOut,
-						channelDataValid,
-						tempResultValid, nReady,
-						channelReady);
+						channelValidArray,
+						pValid, nReady,
+						ready);
 	
 	res <= channelOut(3);
-	valid <= channelDataValid(3);
+	valid <= channelValidArray(3);
 						
 end delay3;
 
@@ -129,6 +125,8 @@ end delay3;
 -- another "operation" block with elastic control signals
 -- integrates the "join" block for its arguments
 -- this a   (a,b) -> a*(a+b)
+-- joining arguments' control signals is now done in the OP unit, once 
+-- for all operations
 ------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
@@ -139,10 +137,8 @@ port(
 	clk, reset : in std_logic;
 	a, b : in std_logic_vector(31 downto 0);
 	result : out std_logic_vector(31 downto 0);
-	pValidArray : in bitArray_t(1 downto 0);
-	nReady : in std_logic;
-	readyArray : out bitArray_t(1 downto 0);
-	valid : out std_logic);
+	pValid, nReady : in std_logic;
+	ready, valid : out std_logic);
 end op1;
 
 ------------------------------------------------------------------------
@@ -152,9 +148,11 @@ architecture forwarding of op1 is
 	signal tempRes : std_logic_vector(31 downto 0);
 begin
 
-	joinArgs : entity work.joinN(vanilla) generic map(2) -- we don't need a join3 since we use 2 times the same argument
-			port map(pValidArray, nReady, valid, readyArray);
+	-- forwarding control signals
+	ready <= nReady;
+	valid <= pValid;
 			
+	-- calculating result
 	addArgs : entity work.adder 
 			port map(a, b, tempRes, open);
 	multArgs : entity work.multiplier	

@@ -101,9 +101,9 @@ end elasticBasic;
 ------------------------------------------------------------------------
 -- based on elasticBasic implementation
 -- delays the adrW and wrData of 1 cycle
--- should not stall at all, since the buffers delay "dependant" data 
--- together (buffers add a delay, but their control signals combined
--- permit not stalling)
+-- should not stall at all (only delay result by one cycle at start), 
+--	since the buffers delay "dependant" data  together (buffers add a 
+-- delay, but their control signals combined permit not to stall)
 ------------------------------------------------------------------------
 architecture elasticBasic_delay1AdrWandWrdata of circuit is
 	
@@ -174,8 +174,8 @@ begin
 						wdbReady, wdbValid);				-- ready, valid
 						
 	-- signals for observation purpose
-	resOut <= opResult;
-	resValid <= OPUresultValid;
+	resOut <= wdbOut;
+	resValid <= wdbValid;
 						
 end elasticBasic_delay1AdrWandWrdata;
 
