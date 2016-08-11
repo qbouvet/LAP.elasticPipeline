@@ -68,7 +68,7 @@ begin
 						RFvalidArray);								-- validArray
 	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
 	
-	OPU : entity work.OPunit(elasticEagerFork)
+	OPU : entity work.OPunit(branchmerge)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
 						opResult, 
@@ -260,6 +260,8 @@ end elasticBasic_delayedAdrW1;
 -- based on elasticBasic implementation
 -- delay the oc by 3 cycles
 -- should stall for 3 cycles at every instuction
+-- NB : won't work with the branchmerge OPunit as long as oc=condition 
+--		doesn't have control signals
 ------------------------------------------------------------------------
 architecture elasticBasic_delayedOc3 of circuit is
 	
@@ -288,7 +290,7 @@ begin
 	instructionFetchedDecoder : entity work.instructionFetcherDecoder(elastic) 
 			port map(	clk, reset, 
 						data, 						-- instr_in
-						adrB, adrA, adrW, argI, delayChannelOutput(3), 
+						adrB, adrA, adrW, argI, oc, 
 						dataValid,					-- pValid
 						(RFreadyArray(3 downto 1), OPUreadyArray(1), delayChannelReady),	-- nReadyArray
 						IFDready, 					-- ready
@@ -307,7 +309,7 @@ begin
 	
 	OPU : entity work.OPunit(branchmerge)
 			port map(	clk, reset,
-						operandB, operandA, argI, oc, 
+						operandB, operandA, argI, delayChannelOutput(3), 
 						opResult, 
 						(RFvalidArray, IFDvalidArray(1), delayChannelValidArray(3)),	-- pValidArray
 						RFreadyArray(0), 							-- nReady
