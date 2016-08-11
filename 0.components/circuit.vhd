@@ -68,7 +68,7 @@ begin
 						RFvalidArray);								-- validArray
 	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
 	
-	OPU : entity work.OPunit(branchmerge)
+	OPU : entity work.OPunit(elasticEagerFork)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
 						opResult, 
@@ -152,7 +152,7 @@ begin
 						RFvalidArray);								-- validArray
 	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
 	
-	OPU : entity work.OPunit(elasticEagerFork)
+	OPU : entity work.OPunit(branchmerge)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
 						opResult, 
@@ -232,7 +232,7 @@ begin
 						RFvalidArray);								-- validArray
 	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
 	
-	OPU : entity work.OPunit(elasticEagerFork)
+	OPU : entity work.OPunit(branchmerge)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
 						opResult, 
@@ -305,7 +305,7 @@ begin
 						RFreadyArray, 								-- readyArray
 						RFvalidArray);								-- validArray
 	
-	OPU : entity work.OPunit(elasticEagerFork)
+	OPU : entity work.OPunit(branchmerge)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
 						opResult, 
@@ -382,7 +382,7 @@ begin
 						RFreadyArray, 								-- readyArray
 						RFvalidArray);								-- validArray
 	
-	OPU : entity work.OPunit(elasticEagerFork)
+	OPU : entity work.OPunit(branchmerge)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
 						opResult, 
@@ -457,7 +457,7 @@ begin
 						RFreadyArray, 								-- readyArray
 						RFvalidArray);								-- validArray
 	
-	OPU : entity work.OPunit(elasticEagerFork)
+	OPU : entity work.OPunit(branchmerge)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
 						opResult, 

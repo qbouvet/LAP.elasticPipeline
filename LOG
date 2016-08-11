@@ -9,6 +9,7 @@ make second version of the circuit
 		implement memory bypass + dependancy resolution unit
 				
 improve the branch/merge blocks
+		add control signals to branch's condition
 		make a size-generic implementation
 				-> 	not really needed right now
 		make a branch implementation with control signals for the condition ?
