@@ -288,7 +288,7 @@ begin
 	instructionFetchedDecoder : entity work.instructionFetcherDecoder(elastic) 
 			port map(	clk, reset, 
 						data, 						-- instr_in
-						adrB, adrA, adrW, argI, oc, 
+						adrB, adrA, adrW, argI, delayChannelOutput(3), 
 						dataValid,					-- pValid
 						(RFreadyArray(3 downto 1), OPUreadyArray(1), delayChannelReady),	-- nReadyArray
 						IFDready, 					-- ready
@@ -375,7 +375,7 @@ begin
 	
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
-						adrB, adrA, adrW, opResult, 
+						adrB, adrA, adrW, delayChannelOutput(3), 
 						(IFDvalidArray(4 downto 2), delayChannelValidArray(3)),-- pValidArray
 						OPUreadyArray(3 downto 2), 					-- nReadyArray
 						operandA, operandB, 
@@ -450,7 +450,7 @@ begin
 	
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
-						adrB, adrA, adrW, opResult, 
+						adrB, adrA, adrW, ebOut, 
 						(IFDvalidArray(4 downto 2), ebValid),-- pValidArray
 						OPUreadyArray(3 downto 2), 					-- nReadyArray
 						operandA, operandB, 
