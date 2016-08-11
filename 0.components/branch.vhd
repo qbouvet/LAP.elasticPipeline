@@ -16,7 +16,7 @@ use work.customTypes.all;
 entity branch is port(
 	condition,
 	pValid : in std_logic;
-	nReadyArray : in bitArray_t(1 downto 0);
+	nReadyArray : in bitArray_t(1 downto 0);	-- (branch1, branch0)
 	validArray : out bitArray_t(1 downto 0);
 	ready : out std_logic);
 end branch;

@@ -24,7 +24,7 @@ use ieee.std_logic_1164.all;
 use work.customTypes.all;
 
 entity merge is port(
-	data0, data1 : in std_logic_vector(31 downto 0);
+	data1, data0 : in std_logic_vector(31 downto 0);
 	dataOut : out  std_logic_vector(31 downto 0);
 	
 	pValidArray : in bitArray_t(1 downto 0);

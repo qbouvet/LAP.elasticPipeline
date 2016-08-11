@@ -139,7 +139,7 @@ begin
 	end process sim;
 
 	-- DUT instance
-	opu : entity work.OPunit(elasticEagerFork)
+	opu : entity work.OPunit(branchmerge)
 		port map(	clk, reset, 
 					argB, argA, argI, oc, 
 					res, 

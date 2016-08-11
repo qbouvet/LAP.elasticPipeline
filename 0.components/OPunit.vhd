@@ -49,11 +49,14 @@ end vanilla;
 
 
 
+
+
 ---------------------------------------------------------------- OP unit
 ------------------------------------------------------------------------
 -- groups together the various operations we want + the selector block
 -- architectures : 	- elasticEagerFork
---					- elastic
+--					- branchmerge
+--					- elastic (maybe not functionnal)
 --					- debug 1-4
 --					- elastic2 (debug)
 ------------------------------------------------------------------------
@@ -75,7 +78,63 @@ entity OPunit is port(
 end OPunit;
 
 ------------------------------------------------------------------------
--- version elastic control signals and an eager fork
+-- version elastic control signals and an eager fork and a "big join" 
+-- that joins all arguments at first
+------------------------------------------------------------------------
+architecture branchmerge of OPunit is
+	
+	signal joinArgsValid, branchReady, mergeReady, addiReady, addiValid, op1Ready, op1Valid : std_logic;
+	signal branchValidArray, mergeReadyArray : bitArray_t(1 downto 0);
+	signal res0, res1  : std_logic_vector(31 downto 0);
+
+begin
+
+	-- join all arguments' control signals at first
+	joinArgs : entity work.joinN(vanilla) generic map (3)
+			port map(	pValidArray(3 downto 1),	-- pValid
+						branchReady,				-- nReady
+						joinArgsValid,
+						readyArray(3 downto 1));
+						
+	-- sends arguments to the wanted operation (only to it)
+	branchArgs : entity work.branch(vanilla)
+			port map(	oc(6) and oc(5),	-- condition : op1
+						joinArgsValid,		-- pValid		
+						(op1Ready, addiReady),-- nReadyArray		(branch1, branch0)
+						branchValidArray, 		-- ready
+						branchReady);	-- validArray 		(branch1, branch0)
+	
+	-- addi operation					
+	addi : entity work.op0(forwarding)
+			port map(	clk, reset,
+						argA, argI, res0,
+						branchValidArray(0),-- pValid
+						mergeReadyArray(0),	-- nReady
+						addiReady, addiValid);	-- (ready, valid)
+	-- other operation					
+	sampleOp1 : entity work.op1(forwarding)
+			port map(	clk, reset,
+						argA, argB, res1,
+						branchValidArray(1),-- pValid
+						mergeReadyArray(1),	-- nReady
+						op1Ready, op1Valid);-- (ready, valid)
+						
+	-- merge the results
+	mergeRes : entity work.merge(vanilla)
+			port map(	res1, res0, res,
+						(op1Valid, addiValid),	-- pValidArray
+						nReady,					-- nReady
+						valid,					-- valid
+						mergeReadyArray);		-- readyArray		
+						
+	-- should add control signal for branch's condition and remove this ugly assignment
+	readyArray(0) <= '1';		
+
+end branchmerge;
+
+------------------------------------------------------------------------
+-- version elastic control signals and an eager fork and a "big join" 
+-- that joins all arguments at first
 ------------------------------------------------------------------------
 architecture elasticEagerFork of OPunit is
 	signal fork_validArray : bitArray_t(1 downto 0);			-- (op1, op0)
@@ -87,7 +146,7 @@ architecture elasticEagerFork of OPunit is
 	
 begin
 
-	-- join arguments' control signals 
+	-- join all arguments' control signals at first
 	joinArgs : entity work.joinN(vanilla) generic map (3)
 			port map(	pValidArray(3 downto 1),	-- pValid
 						forkReady,					-- nReady
@@ -102,7 +161,7 @@ begin
 						forkReady,				-- ready
 						fork_validArray);		-- validArray	
 	
-	addi : entity work.op0(delay3)
+	addi : entity work.op0(forwarding)
 			port map (	clk, reset,
 						argA, argI, res0, 
 						fork_validArray(0),			-- pValid
