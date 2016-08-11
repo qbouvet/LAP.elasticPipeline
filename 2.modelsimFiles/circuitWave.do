@@ -11,8 +11,10 @@ add wave -noupdate /tb_circuit/dataValid
 add wave -noupdate /tb_circuit/currentInstruction
 add wave -noupdate -radix decimal /tb_circuit/resOut
 add wave -noupdate /tb_circuit/resValid
+add wave -noupdate -radix decimal /tb_circuit/rf_a
+add wave -noupdate -radix decimal /tb_circuit/rf_b
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {16418 ps} 0}
+WaveRestoreCursors {{Cursor 1} {79037 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 147
 configure wave -valuecolwidth 275

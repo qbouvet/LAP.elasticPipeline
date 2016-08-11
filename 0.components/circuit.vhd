@@ -20,7 +20,8 @@ entity circuit is port(
 	dataValid : in std_logic;
 	data : in std_logic_vector(31 downto 0);
 	instrOut, resOut : out std_logic_vector(31 downto 0); 	-- to allow us to look what's going on inside during tests
-	resValid, ifdEmpty : out std_logic); 					-- idem + to decide when to finish the simulation
+	resValid, ifdEmpty : out std_logic;						-- idem + to decide when to finish the simulation
+	rf_a, rf_b : out std_logic_vector(31 downto 0)); 
 end circuit;
 
 
@@ -68,7 +69,7 @@ begin
 						RFvalidArray);								-- validArray
 	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
 	
-	OPU : entity work.OPunit(elasticEagerFork)
+	OPU : entity work.OPunit(branchmerge)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
 						opResult, 
@@ -80,6 +81,10 @@ begin
 	-- signals for observation purpose
 	resOut <= opResult;
 	resValid <= OPUresultValid;
+	
+	--debug
+	rf_a <= operandA;
+	rf_b <= operandB;
 						
 end elasticBasic;
 
@@ -176,6 +181,11 @@ begin
 	-- signals for observation purpose
 	resOut <= wdbOut;
 	resValid <= wdbValid;
+	
+	--debug
+	rf_a <= operandA;
+	rf_b <= operandB;
+						
 						
 end elasticBasic_delay1AdrWandWrdata;
 
@@ -250,6 +260,11 @@ begin
 	-- signals for observation purpose
 	resOut <= opResult;
 	resValid <= OPUresultValid;
+	
+	--debug
+	rf_a <= operandA;
+	rf_b <= operandB;
+						
 						
 end elasticBasic_delayedAdrW1;
 
@@ -260,6 +275,8 @@ end elasticBasic_delayedAdrW1;
 -- based on elasticBasic implementation
 -- delay the oc by 3 cycles
 -- should stall for 3 cycles at every instuction
+-- NB : won't work with the branchmerge OPunit as long as oc=condition 
+--		doesn't have control signals
 ------------------------------------------------------------------------
 architecture elasticBasic_delayedOc3 of circuit is
 	
@@ -307,7 +324,7 @@ begin
 	
 	OPU : entity work.OPunit(branchmerge)
 			port map(	clk, reset,
-						operandB, operandA, argI, oc, 
+						operandB, operandA, argI, delayChannelOutput(3), 
 						opResult, 
 						(RFvalidArray, IFDvalidArray(1), delayChannelValidArray(3)),	-- pValidArray
 						RFreadyArray(0), 							-- nReady
@@ -325,6 +342,11 @@ begin
 	-- signals for observation purpose
 	resOut <= opResult;
 	resValid <= OPUresultValid;
+	
+	--debug
+	rf_a <= operandA;
+	rf_b <= operandB;
+						
 						
 end elasticBasic_delayedOc3;
 
@@ -375,7 +397,7 @@ begin
 	
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
-						adrB, adrA, adrW, opResult, 
+						adrB, adrA, adrW, delayChannelOutput(3), 
 						(IFDvalidArray(4 downto 2), delayChannelValidArray(3)),-- pValidArray
 						OPUreadyArray(3 downto 2), 					-- nReadyArray
 						operandA, operandB, 
@@ -402,6 +424,11 @@ begin
 	-- signals for observation purpose
 	resOut <= delayChannelOutput(3);
 	resValid <= delayChannelValidArray(3);
+	
+	--debug
+	rf_a <= operandA;
+	rf_b <= operandB;
+						
 						
 end elasticBasic_delayedResult3;
 
@@ -450,7 +477,7 @@ begin
 	
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
-						adrB, adrA, adrW, opResult, 
+						adrB, adrA, adrW, ebOut, 
 						(IFDvalidArray(4 downto 2), ebValid),-- pValidArray
 						OPUreadyArray(3 downto 2), 					-- nReadyArray
 						operandA, operandB, 
@@ -475,5 +502,10 @@ begin
 	-- signals for observation purpose
 	resOut <= ebOut;
 	resValid <= ebValid;
+	
+	--debug
+	rf_a <= operandA;
+	rf_b <= operandB;
+						
 						
 end elasticBasic_delayedResult1;
