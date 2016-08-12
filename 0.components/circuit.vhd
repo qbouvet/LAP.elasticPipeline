@@ -26,6 +26,129 @@ end circuit;
 
 
 ------------------------------------------------------------------------
+-- elastic implementatino with forwarding path resolution
+------------------------------------------------------------------------
+architecture fwdPathResolution of circuit is
+	
+	--output and control signals of the IFD
+	signal adrA, adrB, adrW, argI, oc 	: std_logic_vector(31 downto 0);
+	signal IFDvalidArray 				: bitArray_t(4 downto 0);
+	
+	-- result of the operation, for writeback
+	signal opResult 					: std_logic_vector(31 downto 0);
+	
+	-- registerFile control signals
+	signal RFreadyArray 				: bitArray_t(3 downto 0);
+	signal RFvalidArray 				: bitArray_t(1 downto 0);
+	signal RFreadyForWrdata 			: std_logic;
+	
+	-- registerFile output
+	signal operandA, operandB 			: std_logic_vector(31 downto 0);	
+	
+	--OP unit control signals
+	signal OPUresultValid 				: std_logic;
+	signal OPUreadyArray 				: bitArray_t(3 downto 0);
+	
+	--resDelayChannel signals
+	signal resDelayChannelOutput 		: vectorArray_t(3 downto 0)(31 downto 0);
+	signal resDelayChannelValidArray 	: bitArray_t(3 downto 0);
+	signal resDelayChannelReady			: std_logic;
+	
+	--adrWDelayChannel signals
+	signal adrWDelayChannelOutput 		: vectorArray_t(3 downto 0)(31 downto 0);
+	signal adrWDelayChannelValidArray 	: bitArray_t(3 downto 0);
+	signal adrWDelayChannelReady		: std_logic;
+	
+	-- fwd path resolution units signals
+	signal fruA_out,fruB_out 			: std_logic_vector(31 downto 0);
+	signal fruAValid, fruAReady, 
+			fruBValid, fruBReady		: std_logic;
+	
+begin
+
+	instructionFetchedDecoder : entity work.instructionFetcherDecoder(elastic) 
+			port map(	clk, reset, 
+						data, 						-- instr_in
+						adrB, adrA, adrW, argI, oc, 
+						dataValid,					-- pValid
+						(RFreadyArray(3 downto 2), 	-- nReadyArray : (adrB, adrA, adrW, argI, oc)
+								adrWDelayChannelReady,
+								OPUreadyArray(1 downto 0)),
+						IFDready, 					-- ready
+						IFDvalidArray,				-- ValidArray : (adrB, adrA, adrW, argI, oc)
+						instrOut,	-- outputs the currentl instruction for observation purpose
+						ifdEmpty);	-- allows to decide when to stop the simulation
+	
+	regFile : entity work.registerFile(elastic)
+			port map(	clk, reset, 
+						adrB, adrA, adrW, opResult, 
+						(IFDvalidArray(4 downto 3), 				-- pValidArray :  (adrB, adrA, adrW, wrData)
+								adrWDelayChannelValidArray(3),
+								resDelayChannelValidArray(3)),
+						(frubReady, fruaReady), 					-- nReadyArray
+						operandA, operandB, 
+						RFreadyArray, 								-- readyArray : (adrB, adrA, adrW, wrData)
+						RFvalidArray);								-- validArray
+	
+	-- can use elastic, elasticEagerFork, branchmerge
+	OPU : entity work.OPunit(branchmerge)
+			port map(	clk, reset,
+						fruB_out, fruA_out, argI, oc, 
+						opResult, 
+						(fruBValid, fruAValid, IFDvalidArray(1 downto 0)),	-- pValidArray
+						resDelayChannelReady,								-- nReady
+						OPUresultValid,										-- valid
+						OPUreadyArray);										-- readyArray : (argB, argA, argI, oc)
+						
+						
+	-- delay channels for both operation's result and write address
+	resDelayChannel : entity work.delayChannel(vanilla) generic map(32, 3)
+			port map(	clk, reset, 
+						opResult, resDelayChannelOutput,-- dataIn, dataOut
+						resDelayChannelValidArray,		-- validArray
+						OPUresultValid, RFreadyArray(0),-- pValid, nReady
+						resDelayChannelReady);			-- ready
+						
+	adrWDelayChannel : entity work.delayChannel(vanilla) generic map(5, 3)
+			port map(	clk, reset,
+						adrW, adrWDelayChannelOutput,
+						adrWDelayChannelValidArray,
+						IFDvalidArray(2), RFreadyArray(1),
+						adrWDelayChannelReady);				
+						
+	-- dependancy resolution units : one for operandA, one for operandB
+	druA : entity work.FwdPathResolutionUnit(vanilla) generic map(32, 4)
+			port map(	adrA,
+						adrWDelayChannelOutput(3 downto 1),	-- wAdrArray : (oldest -> newest(mem bypass) write addresses)
+						adrWDelayChannelValidArray(3 downto 1),			-- adrValidArray : (oldest -> newest(mem bypass) write addresses, readAdr)
+						(resDelayChannelOutput(3 downto 1), 			-- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+								operandA),
+						resDelayChannelValidArray(3 downto 1), 			-- inputValidArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+						fruA_out,										-- output
+						OPUreadyArray(2),								-- nReady
+						fruAValid, fruAReady);							-- valid, ready
+	druB : entity work.FwdPathResolutionUnit(vanilla) generic map(32, 4)
+			port map(	adrB,
+						adrWDelayChannelOutput(3 downto 1),		-- wAdrArray : (oldest -> newest(mem bypass) write addresses)
+						adrWDelayChannelValidArray(3 downto 1),	-- adrValidArray : (oldest -> newest(mem bypass) write addresses, readAdr)
+						(resDelayChannelOutput(3 downto 1), 	-- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+								operandB),
+						resDelayChannelValidArray(3 downto 1), 	-- inputValidArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+						fruB_out,								-- output
+						OPUreadyArray(3),						-- nReady
+						fruBValid, fruBReady);					-- valid, ready
+								
+						
+						
+	-- signals for observation purpose
+	resOut <= opResult;
+	resValid <= OPUresultValid;
+						
+end fwdPathResolution;
+
+
+
+------------------------------------------------------------------------
 -- first elastic implementation, cf cortadella's paper, p8, fig 13a
 ------------------------------------------------------------------------
 architecture elasticBasic of circuit is
@@ -68,6 +191,7 @@ begin
 						RFvalidArray);								-- validArray
 	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
 	
+	-- can use elastic, elasticEagerFork, branchmerge
 	OPU : entity work.OPunit(branchmerge)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
