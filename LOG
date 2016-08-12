@@ -1,10 +1,6 @@
 ------------------------------------------------------------------------------------------------------------
 TODO	
 
-implement and try the "merge" and ""branch" blocks
-		Use the merge and branch
-				make a version of OPunit that replaces fork/join with branch/merge		->		elegant replacement for the multiplexers at the end of the OPunit + allows removing the oc wire going to the end
-		
 make second version of the circuit
 		implement memory bypass + dependancy resolution unit
 				
@@ -75,7 +71,9 @@ what happens if the enable signal stops the shifting, but there's an incomming a
 DONE																															(read bottom-up)
 
 
-				remove joins from OPunit_operations and use a big join at the start of OPunit
+			
+						remove joins from OPunit_operations and use a big join at the start of OPunit
+				make a version of OPunit that replaces fork/join with branch/merge		->		elegant replacement for the multiplexers at the end of the OPunit + allows removing the oc wire going to the end
 		Use the merge and branch
 		test merge2 and branch2
 		implement simple merge2 and branch2
