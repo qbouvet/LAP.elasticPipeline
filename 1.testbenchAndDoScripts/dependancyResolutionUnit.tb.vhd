@@ -10,13 +10,13 @@ architecture testbench of tb_FwdPathResolutionUnit is
 	constant INPUT_NB : integer := 4;	
 	constant DATASIZE : INTEGER := 32;
 	
-	signal readAdr 				: std_logic_vector(4 downto 0);
-	signal wAdrArray 			: ADDR_ARRAY(INPUT_NB-1 downto 1);						-- (memory bypass, newest -> oldest write addresses)
-	signal adrValidArray		: bitArray_t(INPUT_NB-1 downto 0);						-- (memory bypass, newest -> oldest write addresses, readAdr)
+	signal readAdr 				: std_logic_vector(31 downto 0);
+	signal wAdrArray 			: vectorArray_t(INPUT_NB-1 downto 1)(31 downto 0);						-- (newest -> oldest(mem bypass) write addresses)
+	signal adrValidArray		: bitArray_t(INPUT_NB-1 downto 0);						-- (newest -> oldest(mem bypass) write addresses, readAdr)
 	
-	signal inputArray 			: vectorArray_t(INPUT_NB-1 DOWNTO 0)(DATASIZE-1 downto 0);-- (memory bypass, forwarding paths in "newest instructions leftmost" order, RF output)
+	signal inputArray 			: vectorArray_t(INPUT_NB-1 DOWNTO 0)(DATASIZE-1 downto 0);-- (newest -> oldest(mem bypass) instruction's results, RF output)
 	signal output 				: std_logic_vector(DATASIZE-1 downto 0);		
-	signal inputValidArray 		: bitArray_t(INPUT_NB-1 downto 0);						-- (memory bypass, newwest->oldest instruction result, registerFile)
+	signal inputValidArray 		: bitArray_t(INPUT_NB-1 downto 0);						-- (newest -> oldest(mem bypass) instruction's results, RF output)
 	signal nReady, valid, ready	: std_logic; 
 begin
 	
@@ -45,7 +45,7 @@ begin
 		newline;print("simulation started - 4 inputs");
 		
 		
-		wAdrArray <= ("00001","00010","00011"); --(1->mem bypass, 2->fwd0, 3->fwd1)
+		wAdrArray <= (X"00000001", X"00000002", X"00000003"); --(1->mem bypass, 2->fwd0, 3->fwd1)
 		inputArray <= (X"00000001",X"00000002",X"00000003",X"0000000A"); --(mem bypass=1, fwd0=2, fwd1=3, RF=10)
 		adrValidArray <= "1111";
 		inputValidArray <= "1111";
@@ -57,15 +57,15 @@ begin
 		
 		
 		assert output = X"0000000A" report "(1)";	-- no matching adress -> get from RF
-		readAdr <= "00001";
+		readAdr <= X"00000001";
 		waitPeriod;
 												-- reading from different inputs
 		assert output = X"00000001" report "(2)";
-		readAdr <= "00010";
+		readAdr <= X"00000002";
 		waitPeriod;
 		
 		assert output = X"00000002" report "(3)";
-		readAdr <= "00011";
+		readAdr <= X"00000003";
 		waitPeriod;
 		
 		assert output = X"00000003" report "(4)";
@@ -87,7 +87,7 @@ begin
 		
 		assert ready = '1' report "(3)";	-- ready is forwarded
 		nReady <= '0';
-		readAdr <= "00010";			-- 2 -> fwd0
+		readAdr <= X"00000002";			-- 2 -> fwd0
 		inputValidArray <= "1011";	-- (membypass, fwd0, fdw1, rf)
 		adrValidArray <= "1111";	-- (membypass, fwd0, fdw1, rf)
 		waitPeriod;
@@ -98,7 +98,7 @@ begin
 		waitPeriod;
 		
 		assert valid='0' report "(5)";		-- data is valid, but address is not 
-		readAdr <= "00011";			-- 3->fwd1
+		readAdr <= X"00000003";			-- 3->fwd1
 		inputValidArray <= "0010";
 		adrValidArray <= "0010";
 		waitPeriod;
@@ -115,8 +115,9 @@ begin
 	-- instantiate design under test
 	DUT : entity work.FwdPathResolutionUnit(vanilla) generic map(DATASIZE, INPUT_NB) 
 			port map( 	readAdr, wAdrArray, adrValidArray,
-						inputArray, output, 
-						inputValidArray, nReady,
+						inputArray, inputValidArray, 
+						output, 
+						nReady,
 						valid, ready);
 	
 	-- ticks the clock
