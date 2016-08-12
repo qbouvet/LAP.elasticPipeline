@@ -14,6 +14,7 @@ improve the branch/merge blocks
 						the register file would stall the condition, so there would not be any problem. 
 						data flows <-> condition flows.
 				-> 	in other uses, or modified versions of the circuit, that may be needed
+		add an "oc" signal to the merge
 
 branch/merge thoughts 
 		can they replace the early evaluation model that uses antitokens ? cf written stuff 
