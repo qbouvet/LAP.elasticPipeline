@@ -63,6 +63,9 @@ architecture fwdPathResolution of circuit is
 	signal fruA_out,fruB_out 			: std_logic_vector(31 downto 0);
 	signal fruAValid, fruAReady, 
 			fruBValid, fruBReady		: std_logic;
+			
+	-- aggregate signals out of the port map
+	signal druBinputArray_temp, druAinputArray_temp : vectorArray_t(3 downto 0)(31 downto 0);
 	
 begin
 
@@ -116,29 +119,29 @@ begin
 						IFDvalidArray(2), RFreadyArray(1),
 						adrWDelayChannelReady);				
 						
+						
+	-- aggregate 
+	druBinputArray_temp <= (resDelayChannelOutput(3 downto 1), operandB);		-- inputArray : (oldest(mem bypass) -> newest instruction's results, RF output)
+	druAinputArray_temp <= (resDelayChannelOutput(3 downto 1), operandA); -- inputArray : (oldest(mem bypass) -> newest instruction's results, RF output)
 	-- dependancy resolution units : one for operandA, one for operandB
-	druA : entity work.FwdPathResolutionUnit(vanilla) generic map(32, 4)
+	druA : entity work.FwdPathResolutionUnit(try1) generic map(32, 4)
 			port map(	adrA,
-						adrWDelayChannelOutput(3 downto 1),	-- wAdrArray : (oldest -> newest(mem bypass) write addresses)
-						adrWDelayChannelValidArray(3 downto 1),			-- adrValidArray : (oldest -> newest(mem bypass) write addresses, readAdr)
-						(resDelayChannelOutput(3 downto 1), 			-- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
-								operandA),
-						resDelayChannelValidArray(3 downto 1), 			-- inputValidArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+						adrWDelayChannelOutput(3 downto 1),				-- wAdrArray : (oldest(mem bypass) -> newest write addresses)
+						adrWDelayChannelValidArray(3 downto 1),			-- adrValidArray : (oldest(mem bypass) -> newest write addresses, readAdr)
+						druAinputArray_temp, 
+						resDelayChannelValidArray(3 downto 1), 			-- inputValidArray : (oldest(mem bypass) -> newest instruction's results, RF output)
 						fruA_out,										-- output
 						OPUreadyArray(2),								-- nReady
 						fruAValid, fruAReady);							-- valid, ready
-	druB : entity work.FwdPathResolutionUnit(vanilla) generic map(32, 4)
+	druB : entity work.FwdPathResolutionUnit(try1) generic map(32, 4)
 			port map(	adrB,
-						adrWDelayChannelOutput(3 downto 1),		-- wAdrArray : (oldest -> newest(mem bypass) write addresses)
-						adrWDelayChannelValidArray(3 downto 1),	-- adrValidArray : (oldest -> newest(mem bypass) write addresses, readAdr)
-						(resDelayChannelOutput(3 downto 1), 	-- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
-								operandB),
-						resDelayChannelValidArray(3 downto 1), 	-- inputValidArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+						adrWDelayChannelOutput(3 downto 1),		-- wAdrArray : -- (oldest(mem bypass) -> newest write addresses)
+						adrWDelayChannelValidArray(3 downto 1),	-- adrValidArray : (oldest(mem bypass) -> newest write addresses, readAdr)
+						druBinputArray_temp,
+						resDelayChannelValidArray(3 downto 1), 	-- inputValidArray : (oldest(mem bypass) -> newest instruction's results, RF output)
 						fruB_out,								-- output
 						OPUreadyArray(3),						-- nReady
 						fruBValid, fruBReady);					-- valid, ready
-								
-						
 						
 	-- signals for observation purpose
 	resOut <= opResult;
