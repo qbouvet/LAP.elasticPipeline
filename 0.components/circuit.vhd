@@ -63,6 +63,9 @@ architecture fwdPathResolution of circuit is
 	signal fruA_out,fruB_out 			: std_logic_vector(31 downto 0);
 	signal fruAValid, fruAReady, 
 			fruBValid, fruBReady		: std_logic;
+			
+	-- temporary signals used to avoid aggregating signals in the port map, which leads to a bug at compilation
+	signal druAInputArray_temp, druBInputArray_temp : vectorArray_t(3 downto 0)(31 downto 0);
 	
 begin
 
@@ -116,13 +119,15 @@ begin
 						IFDvalidArray(2), RFreadyArray(1),
 						adrWDelayChannelReady);				
 						
+	druAInputArray_temp	<= (resDelayChannelOutput(3 downto 1), operandA); -- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+	druBInputArray_temp	<= (resDelayChannelOutput(3 downto 1), operandB); -- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+						
 	-- dependancy resolution units : one for operandA, one for operandB
 	druA : entity work.FwdPathResolutionUnit(vanilla) generic map(32, 4)
 			port map(	adrA,
-						adrWDelayChannelOutput(3 downto 1),	-- wAdrArray : (oldest -> newest(mem bypass) write addresses)
+						adrWDelayChannelOutput(3 downto 1),				-- wAdrArray : (oldest -> newest(mem bypass) write addresses)
 						adrWDelayChannelValidArray(3 downto 1),			-- adrValidArray : (oldest -> newest(mem bypass) write addresses, readAdr)
-						(resDelayChannelOutput(3 downto 1), 			-- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
-								operandA),
+						druAInputArray_temp, 							-- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
 						resDelayChannelValidArray(3 downto 1), 			-- inputValidArray : (oldest -> newest(mem bypass) instruction's results, RF output)
 						fruA_out,										-- output
 						OPUreadyArray(2),								-- nReady
@@ -131,8 +136,7 @@ begin
 			port map(	adrB,
 						adrWDelayChannelOutput(3 downto 1),		-- wAdrArray : (oldest -> newest(mem bypass) write addresses)
 						adrWDelayChannelValidArray(3 downto 1),	-- adrValidArray : (oldest -> newest(mem bypass) write addresses, readAdr)
-						(resDelayChannelOutput(3 downto 1), 	-- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
-								operandB),
+						druBInputArray_temp,				 	-- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
 						resDelayChannelValidArray(3 downto 1), 	-- inputValidArray : (oldest -> newest(mem bypass) instruction's results, RF output)
 						fruB_out,								-- output
 						OPUreadyArray(3),						-- nReady
