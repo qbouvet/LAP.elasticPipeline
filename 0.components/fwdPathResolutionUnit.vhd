@@ -14,8 +14,6 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
---use ieee.numeric_std.all;
---use IEEE.math_real."log2";
 use work.customTypes.all;
 
 entity FwdPathResolutionUnit is
@@ -44,9 +42,8 @@ begin
 	output <= inputArray(0);		-- by default, we select the data read from the register file
 	valid <= inputValidArray(0);
 																											
-	for i in INPUT_NB-1 downto 1 loop			-- order of exploration : oldest (memoy bypass) to newest instructions
+	for i in INPUT_NB-1 downto 1 loop		-- order of exploration : oldest (memoy bypass) to newest instructions
 		if(readAdr = wAdrArray(i)) then		-- if the address we want to read matches with one that is currently being written
-		
 			-- select the correct input
 			output <= inputArray(i);	
 			-- forward its 'valid0' control signal

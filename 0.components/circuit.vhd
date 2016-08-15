@@ -2,6 +2,7 @@
 ------------------------------------------------------------------------
 -- implementation of the circuit described in cortadella's papers
 -- architectures : 	- elasticBasic
+--					- fwdPathResolution
 --
 -- test versions :	- elasticBasic_delayedResult1
 -- 					- elasticBasic_delayedResult3
@@ -26,7 +27,7 @@ end circuit;
 
 
 ------------------------------------------------------------------------
--- elastic implementatino with forwarding path resolution
+-- elastic implementation with forwarding path resolution
 ------------------------------------------------------------------------
 architecture fwdPathResolution of circuit is
 	
@@ -60,12 +61,14 @@ architecture fwdPathResolution of circuit is
 	signal adrWDelayChannelReady		: std_logic;
 	
 	-- fwd path resolution units signals
-	signal fruA_out,fruB_out 			: std_logic_vector(31 downto 0);
-	signal fruAValid, fruAReady, 
-			fruBValid, fruBReady		: std_logic;
+	signal fpruA_out,fpruB_out 			: std_logic_vector(31 downto 0);
+	signal fpruAValid, fpruAReady, 
+			fpruBValid, fpruBReady		: std_logic;
 			
 	-- temporary signals used to avoid aggregating signals in the port map, which leads to a bug at compilation
-	signal druAInputArray_temp, druBInputArray_temp : vectorArray_t(3 downto 0)(31 downto 0);
+	signal fpruAInputArray_temp, fpruBInputArray_temp 				: vectorArray_t(3 downto 0)(31 downto 0);
+	signal FPRUaInputValidArray_temp, FPRUbInputValidArray_temp, 
+			FPRUaAdrValidArray_temp, FPRUbAdrValidArray_temp		: bitArray_t(3 downto 0);
 	
 begin
 
@@ -88,17 +91,17 @@ begin
 						(IFDvalidArray(4 downto 3), 				-- pValidArray :  (adrB, adrA, adrW, wrData)
 								adrWDelayChannelValidArray(3),
 								resDelayChannelValidArray(3)),
-						(frubReady, fruaReady), 					-- nReadyArray
+						(fprubReady, fpruaReady), 					-- nReadyArray
 						operandA, operandB, 
 						RFreadyArray, 								-- readyArray : (adrB, adrA, adrW, wrData)
-						RFvalidArray);								-- validArray
+						RFvalidArray);								-- validArray : (a, b)
 	
 	-- can use elastic, elasticEagerFork, branchmerge
 	OPU : entity work.OPunit(branchmerge)
 			port map(	clk, reset,
-						fruB_out, fruA_out, argI, oc, 
+						fpruB_out, fpruA_out, argI, oc, 
 						opResult, 
-						(fruBValid, fruAValid, IFDvalidArray(1 downto 0)),	-- pValidArray
+						(fpruBValid, fpruAValid, IFDvalidArray(1 downto 0)),-- pValidArray
 						resDelayChannelReady,								-- nReady
 						OPUresultValid,										-- valid
 						OPUreadyArray);										-- readyArray : (argB, argA, argI, oc)
@@ -112,35 +115,39 @@ begin
 						OPUresultValid, RFreadyArray(0),-- pValid, nReady
 						resDelayChannelReady);			-- ready
 						
-	adrWDelayChannel : entity work.delayChannel(vanilla) generic map(5, 3)
+	adrWDelayChannel : entity work.delayChannel(vanilla) generic map(32, 3)
 			port map(	clk, reset,
 						adrW, adrWDelayChannelOutput,
 						adrWDelayChannelValidArray,
 						IFDvalidArray(2), RFreadyArray(1),
 						adrWDelayChannelReady);				
 						
-	druAInputArray_temp	<= (resDelayChannelOutput(3 downto 1), operandA); -- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
-	druBInputArray_temp	<= (resDelayChannelOutput(3 downto 1), operandB); -- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+	fpruAInputArray_temp	<= (resDelayChannelOutput(3 downto 1), operandA); -- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+	fpruBInputArray_temp	<= (resDelayChannelOutput(3 downto 1), operandB); -- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+	FPRUaInputValidArray_temp <= (resDelayChannelValidArray(3 downto 1), RFvalidArray(0));  -- inputValidArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+	FPRUbInputValidArray_temp <= (resDelayChannelValidArray(3 downto 1), RFvalidArray(1)); -- inputValidArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+	FPRUaAdrValidArray_temp <= (adrWDelayChannelValidArray(3 downto 1), IFDvalidArray(3)); -- adrValidArray : (oldest -> newest(mem bypass) write addresses, readAdr)
+	FPRUbAdrValidArray_temp <= (adrWDelayChannelValidArray(3 downto 1),IFDvalidArray(4)); -- adrValidArray : (oldest -> newest(mem bypass) write addresses, readAdr)				
 						
 	-- dependancy resolution units : one for operandA, one for operandB
-	druA : entity work.FwdPathResolutionUnit(vanilla) generic map(32, 4)
+	fpruA : entity work.FwdPathResolutionUnit(vanilla) generic map(32, 4)
 			port map(	adrA,
-						adrWDelayChannelOutput(3 downto 1),				-- wAdrArray : (oldest -> newest(mem bypass) write addresses)
-						adrWDelayChannelValidArray(3 downto 1),			-- adrValidArray : (oldest -> newest(mem bypass) write addresses, readAdr)
-						druAInputArray_temp, 							-- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
-						resDelayChannelValidArray(3 downto 1), 			-- inputValidArray : (oldest -> newest(mem bypass) instruction's results, RF output)
-						fruA_out,										-- output
-						OPUreadyArray(2),								-- nReady
-						fruAValid, fruAReady);							-- valid, ready
-	druB : entity work.FwdPathResolutionUnit(vanilla) generic map(32, 4)
+						adrWDelayChannelOutput(3 downto 1),		-- wAdrArray : (oldest -> newest(mem bypass) write addresses)
+						FPRUaAdrValidArray_temp,				-- adrValidArray : (oldest -> newest(mem bypass) write addresses, readAdr)
+						fpruAInputArray_temp, 					-- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+						FPRUaInputValidArray_temp,				-- inputValidArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+						fpruA_out,								-- output
+						OPUreadyArray(2),						-- nReady
+						fpruAValid, fpruAReady);				-- valid, ready
+	fpruB : entity work.FwdPathResolutionUnit(vanilla) generic map(32, 4)
 			port map(	adrB,
 						adrWDelayChannelOutput(3 downto 1),		-- wAdrArray : (oldest -> newest(mem bypass) write addresses)
-						adrWDelayChannelValidArray(3 downto 1),	-- adrValidArray : (oldest -> newest(mem bypass) write addresses, readAdr)
-						druBInputArray_temp,				 	-- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
-						resDelayChannelValidArray(3 downto 1), 	-- inputValidArray : (oldest -> newest(mem bypass) instruction's results, RF output)
-						fruB_out,								-- output
+						FPRUbAdrValidArray_temp,				-- adrValidArray : (oldest -> newest(mem bypass) write addresses, readAdr)
+						fpruBInputArray_temp,				 	-- inputArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+						FPRUbInputValidArray_temp,				-- inputValidArray : (oldest -> newest(mem bypass) instruction's results, RF output)
+						fpruB_out,								-- output
 						OPUreadyArray(3),						-- nReady
-						fruBValid, fruBReady);					-- valid, ready
+						fpruBValid, fpruBReady);				-- valid, ready
 								
 						
 						
@@ -149,6 +156,7 @@ begin
 	resValid <= OPUresultValid;
 						
 end fwdPathResolution;
+
 
 
 

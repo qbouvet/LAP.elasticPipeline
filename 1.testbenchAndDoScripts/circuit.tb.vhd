@@ -97,7 +97,7 @@ begin
 	
 	
 	--instantiates the DUT
-	circ : entity work.circuit(elasticBasic_delay1AdrWandWrdata) 
+	circ : entity work.circuit(fwdPathResolution) 
 			port map(	reset, clk, 
 						IFDready,	-- ready
 						dataValid,	-- pValid
