@@ -27,6 +27,7 @@ package customTypes is
 
 	-- the address array used as input to the dependancy detection unit
 	--type ADDR_ARRAY is array(integer range <>) of std_logic_vector(4 downto 0);
+	--no longer used
 	
 	-- data type used in the register file
 	type register_t is array(63 downto 0) of std_logic_vector(31 downto 0);

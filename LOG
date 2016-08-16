@@ -8,7 +8,9 @@ make second version of the circuit
 						discuss this
 				
 improve the branch/merge blocks
-		add an "oc" signal to the merge
+		add an "oc" signal to the merge (hybrid join/merge)
+		add control signals to the 'oc' of branch
+				test the new versions of branch and merge
 		make a size-generic implementation
 				-> 	not really needed right now
 		make a branch implementation with control signals for the condition ?

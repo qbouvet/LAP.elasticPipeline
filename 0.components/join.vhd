@@ -1,3 +1,46 @@
+--------------------------------------------------------------  joinN
+---------------------------------------------------------------------
+-- generic version of Join block
+---------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use work.customTypes.all;
+
+entity joinN is generic (SIZE : integer);
+port (
+	pValidArray : in bitArray_t(SIZE-1 downto 0);
+	nReady : in std_logic;
+	valid : out std_logic;
+	readyArray : out bitArray_t(SIZE-1 downto 0));	
+end joinN;
+
+architecture vanilla of joinN is
+	signal allPValid : std_logic;
+begin
+	
+	allPValidAndGate : entity work.andN generic map(SIZE)
+			port map(	pValidArray,
+						allPValid);
+	
+	valid <= allPValid;
+	
+	process (pValidArray, allPValid, nReady)
+	begin
+	for i in 0 to SIZE-1 loop
+		readyArray(i) <= (not pValidArray(i)) or (allPValid and nReady);
+	end loop;
+	end process;
+			
+end vanilla;
+
+
+
+
+
+
+
+
+
 ---------------------------------------------------------------  join
 ---------------------------------------------------------------------
 -- joins the control signals of 2 elastic buffers into a single 
@@ -43,41 +86,6 @@ end try;
 
 
 
-
---------------------------------------------------------------  joinN
----------------------------------------------------------------------
--- generic version of Join block
----------------------------------------------------------------------
-library ieee;
-use ieee.std_logic_1164.all;
-use work.customTypes.all;
-
-entity joinN is generic (SIZE : integer);
-port (
-	pValidArray : in bitArray_t(SIZE-1 downto 0);
-	nReady : in std_logic;
-	valid : out std_logic;
-	readyArray : out bitArray_t(SIZE-1 downto 0));	
-end joinN;
-
-architecture vanilla of joinN is
-	signal allPValid : std_logic;
-begin
-	
-	allPValidAndGate : entity work.andN generic map(SIZE)
-			port map(	pValidArray,
-						allPValid);
-	
-	valid <= allPValid;
-	
-	process (pValidArray, allPValid, nReady)
-	begin
-	for i in 0 to SIZE-1 loop
-		readyArray(i) <= (not pValidArray(i)) or (allPValid and nReady);
-	end loop;
-	end process;
-			
-end vanilla;
 
 
 
