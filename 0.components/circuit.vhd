@@ -21,13 +21,7 @@ entity circuit is port(
 	dataValid 									: in std_logic;
 	data 										: in std_logic_vector(31 downto 0);
 	instrOut, resOut 							: out std_logic_vector(31 downto 0); 	-- to allow us to look what's going on inside during tests
-	resValid, ifdEmpty 							: out std_logic; 					-- idem + to decide when to finish the simulation
-	RFreadyArray_out 							: out bitArray_t(3 downto 0);		-- debug
-	FPRUaValidOut, FPRUbValidOut 				: out std_logic;
-	FRPUaInputValidArray, FRPUbInputValidArray,
-		FRPUaAdrValidArray, FRPUbAdrValidArray 	: out bitArray_t(3 downto 0);
-	IFDvalidArray_out 							: out bitArray_t(4 downto 0);
-	OPUreadyArray_out 							: out bitArray_t(3 downto 0)
+	resValid, ifdEmpty 							: out std_logic		 					-- idem + to decide when to finish the simulation
 );end circuit;
 
 
@@ -94,7 +88,7 @@ begin
 	
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
-						adrB, adrA, adrW, opResult, 
+						adrB, adrA, adrWDelayChannelOutput(3), resDelayChannelOutput(3), 
 						(IFDvalidArray(4 downto 3), 				-- pValidArray :  (adrB, adrA, adrW, wrData)
 								adrWDelayChannelValidArray(3),
 								resDelayChannelValidArray(3)),
@@ -104,7 +98,7 @@ begin
 						RFvalidArray);								-- validArray : (a, b)
 	
 	-- can use elastic, elasticEagerFork, branchmerge
-	OPU : entity work.OPunit(branchmerge)
+	OPU : entity work.OPunit(elasticEagerFork)
 			port map(	clk, reset,
 						FPRUoutputArray(1), FPRUoutputArray(0), argI, oc, 	-- (argB, argA, argI, oc)
 						opResult, 
