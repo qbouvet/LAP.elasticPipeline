@@ -51,14 +51,20 @@ begin
 	-- input(0) and input(1) are register file's operandA and oerandB
 	for i in INPUT_NB-1 downto 2 loop
 		-- if A's address matches
-		if(readAdrA = wAdrArray(i)) then
+		if readAdrA = X"00000000" then
+			outputArray(0) <= inputArray(0);
+			validArray(0) <= inputValidArray(0);
+		elsif(readAdrA = wAdrArray(i)) then
 			-- select the correct input
 			outputArray(0) <= inputArray(i);	
 			-- forward its 'valid0' control signal
 			validArray(0) <= inputValidArray(i) and adrValidArray(i);
 		end if;
 		-- if B's address matches
-		if(readAdrB = wAdrArray(i)) then
+		if readAdrB = X"00000000" then
+			outputArray(1) <= inputArray(1);
+			validArray(1) <= inputValidArray(1);
+		elsif(readAdrB = wAdrArray(i)) then
 			-- select the correct input
 			outputArray(1) <= inputArray(i);	
 			-- forward its 'valid0' control signal

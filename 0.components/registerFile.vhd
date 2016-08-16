@@ -21,7 +21,7 @@ entity registerFile is port(
 	
 	a, b  : out std_logic_vector(31 downto 0);	
 	readyArray : out bitArray_t(3 downto 0); -- adrB, adrA, adrW, wrData
-	validArray : out bitArray_t(1 downto 0)	 -- b, a
+	validArray : out bitArray_t(1 downto 0)	 -- b, a§
 );
 end registerFile;
 
