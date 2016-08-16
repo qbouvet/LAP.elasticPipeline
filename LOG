@@ -3,9 +3,12 @@ TODO
 
 make second version of the circuit
 		implement memory bypass + dependancy resolution unit
+				find the best solution for the "adress and result not on phase" issue
+						-> hybrid join/merge + branch solution
+						discuss this
 				
 improve the branch/merge blocks
-		add control signals to branch's condition
+		add an "oc" signal to the merge
 		make a size-generic implementation
 				-> 	not really needed right now
 		make a branch implementation with control signals for the condition ?
@@ -14,7 +17,6 @@ improve the branch/merge blocks
 						the register file would stall the condition, so there would not be any problem. 
 						data flows <-> condition flows.
 				-> 	in other uses, or modified versions of the circuit, that may be needed
-		add an "oc" signal to the merge
 
 branch/merge thoughts 
 		can they replace the early evaluation model that uses antitokens ? cf written stuff 
@@ -72,6 +74,10 @@ what happens if the enable signal stops the shifting, but there's an incomming a
 DONE																															(read bottom-up)
 
 
+
+				solve unkown compilation error
+		implement memory bypass + forwarding unit
+make second version of the circuit
 			
 						remove joins from OPunit_operations and use a big join at the start of OPunit
 				make a version of OPunit that replaces fork/join with branch/merge		->		elegant replacement for the multiplexers at the end of the OPunit + allows removing the oc wire going to the end

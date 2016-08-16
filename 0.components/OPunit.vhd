@@ -1,3 +1,38 @@
+---------------------------------------------------------------- OP unit
+------------------------------------------------------------------------
+-- groups together the various operations we want + the selector block
+-- architectures : 	- elasticEagerFork
+--					- branchmerge
+--					- elastic (maybe not functionnal)
+--					- debug 1-4
+--					- elastic2 (debug)
+------------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use work.customTypes.all;
+
+entity OPunit is port(
+	clk, reset : in std_logic;
+	argB, argA, argI, oc : in std_logic_vector (31 downto 0); -- operande, immediate argument and opcode
+	res : out std_logic_vector (31 downto 0);
+		
+	--control signals for argB, argA, argI, oc
+	pValidArray : in bitArray_t(3 downto 0);
+	nReady : in std_logic;
+	valid : out std_logic;
+	readyArray : out bitArray_t(3 downto 0));
+end OPunit;
+
+
+
+
+
+
+
+
+
+
 --------------------------------------------------------------- Selector
 ------------------------------------------------------------------------
 -- joins together controls signals of the results and chose the wanted 
@@ -50,32 +85,6 @@ end vanilla;
 
 
 
-
----------------------------------------------------------------- OP unit
-------------------------------------------------------------------------
--- groups together the various operations we want + the selector block
--- architectures : 	- elasticEagerFork
---					- branchmerge
---					- elastic (maybe not functionnal)
---					- debug 1-4
---					- elastic2 (debug)
-------------------------------------------------------------------------
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-use work.customTypes.all;
-
-entity OPunit is port(
-	clk, reset : in std_logic;
-	argB, argA, argI, oc : in std_logic_vector (31 downto 0); -- operande, immediate argument and opcode
-	res : out std_logic_vector (31 downto 0);
-		
-	--control signals for argB, argA, argI, oc
-	pValidArray : in bitArray_t(3 downto 0);
-	nReady : in std_logic;
-	valid : out std_logic;
-	readyArray : out bitArray_t(3 downto 0));
-end OPunit;
 
 ------------------------------------------------------------------------
 -- version elastic control signals and an eager fork and a "big join" 
@@ -161,7 +170,7 @@ begin
 						forkReady,				-- ready
 						fork_validArray);		-- validArray	
 	
-	addi : entity work.op0(forwarding)
+	addi : entity work.op0(delay1)
 			port map (	clk, reset,
 						argA, argI, res0, 
 						fork_validArray(0),			-- pValid

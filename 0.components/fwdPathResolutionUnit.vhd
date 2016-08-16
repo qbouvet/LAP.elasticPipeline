@@ -38,7 +38,7 @@ begin
 	readyArray(0) <= nReadyArray(0);
 	readyArray(1) <= nReadyArray(1);
 
-	operandA : process(readAdrA, readAdrB, wAdrArray, adrValidArray, inputArray, inputValidArray)
+	process(readAdrA, readAdrB, wAdrArray, adrValidArray, inputArray, inputValidArray)
 	begin
 	-- by default, we pick the data from the register file for operandA and operandB
 	outputArray(0) <= inputArray(0);

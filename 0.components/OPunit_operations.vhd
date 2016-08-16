@@ -90,6 +90,25 @@ begin
 end forwarding;
 
 ------------------------------------------------------------------------
+-- delay added artificially : result now goes through 1 elastic buffer
+-- joining arguments' control signals is now done in the OP unit, once 
+-- for all operations
+------------------------------------------------------------------------
+architecture delay1 of op0 is
+	signal tempResult : std_logic_vector(31 downto 0);
+begin
+
+	addArgs : entity work.adder 
+			port map (a, b, tempResult, open); --leave the carry open
+			
+	eb : entity work.elasticBuffer(vanilla) generic map(32)
+			port map(	clk, reset,
+						tempResult, res,
+						pValid, nReady,
+						ready, valid);						
+end delay1;
+
+------------------------------------------------------------------------
 -- delay added artificially : result now goes through 3 buffers
 -- (delay channel of size 3)
 -- joining arguments' control signals is now done in the OP unit, once 

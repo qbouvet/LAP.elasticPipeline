@@ -209,7 +209,7 @@ begin
 	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
 	
 	-- can use elastic, elasticEagerFork, branchmerge
-	OPU : entity work.OPunit(branchmerge)
+	OPU : entity work.OPunit(elasticEagerFork)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
 						opResult, 
