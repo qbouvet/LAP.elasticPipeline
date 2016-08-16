@@ -6,6 +6,57 @@
 
 
 
+
+
+
+---------------------------------------------------------------------
+-- simple 2-branches implementation based on the "elastic GCRAs" paper (p4)
+-- implements an additional set of control signals for 'condition'
+-- implemented as an additional join block
+---------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use work.customTypes.all;
+
+entity branchHybrid is port(
+	condition,
+	conditionValid,
+	dataValid 		: in std_logic;
+	nReadyArray 	: in bitArray_t(1 downto 0);	-- (branch1, branch0)
+	validArray 		: out bitArray_t(1 downto 0);	-- (branch1, branch0)
+	readyArray  	: out bitArray_t(1 downto 0));	-- (data, condition)
+end branchHybrid;
+
+architecture vanilla of branchHybrid is
+	signal joinValid, branchReady 	: std_logic;
+begin
+
+	j : entity work.joinN(vanilla) generic map(2)
+			port map(	(dataValid, conditionValid),
+						branchReady,
+						joinValid,
+						readyArray);
+						
+	br : entity work.branch(vanilla)
+			port map(	condition,
+						joinValid,
+						nReadyArray,
+						validArray,
+						branchReady);
+		
+end vanilla;
+
+
+
+
+
+
+
+
+
+
+
+
 ---------------------------------------------------------------------
 -- simple 2-branches implementation from "elastic GCRAs" paper (p4)
 ---------------------------------------------------------------------
