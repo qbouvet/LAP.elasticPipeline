@@ -97,33 +97,34 @@ begin
 						RFvalidArray);								-- validArray
 	
 	-- can use elastic, elasticEagerFork, branchmerge
-	OPU : entity work.OPunit(elasticEagerFork)
+	OPU : entity work.OPunit(branchmerge)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
 						opResult, 
 						(fwdUnitValidArray, IFDvalidArray(1 downto 0)),	-- pValidArray
-						resBufferReady,		 								-- nReady
+						resBufferReady,		 							-- nReady
 						OPUresultValid,									-- valid
 						OPUreadyArray);
 						
-	fwdUnit : entity work.fwdPathResolutionUnit(vanilla) generic map(32, 3)
-			port map(	adrB, adrA,
-						adrWarrayWrapper(1 downto 1),
-						FUadrValidArray_temp,							-- adrValidArray : 	(adrW, adrB, adrA)
-						FUinputArray_temp,					-- inputArray : 	(result, rf_b, rf_a)
-						FUinputValidArray_temp,					-- inputValidArray: idem
-						fwdUnitOutput,
-						OPUreadyArray(3 downto 2),						-- nReadyArray : 	(B, A)
-						fwdUnitValidArray, fwdUnitReadyArray);			-- valid/readyArray:(B, A)
-	
+						
 	-- ugly typecast stuff
 	adrWarrayWrapper <= (adrW, X"00000000");	
 	
 	-- ugly stuff the fixes the "questa unknown error"
 	FUadrValidArray_temp <= (IFDvalidArray(2), IFDvalidArray(4 downto 3));
 	FUinputArray_temp <= (opResult, operandB, operandA);
-	FUinputValidArray_temp <= (OPUresultValid, RFvalidArray);				
-	
+	FUinputValidArray_temp <= (OPUresultValid, RFvalidArray);		
+						
+	fwdUnit : entity work.fwdPathResolutionUnit(vanilla) generic map(32, 3)
+			port map(	adrB, adrA,
+						adrWarrayWrapper(1 downto 1),
+						FUadrValidArray_temp,							-- adrValidArray : 	(adrW, adrB, adrA)
+						FUinputArray_temp,								-- inputArray : 	(result, rf_b, rf_a)
+						FUinputValidArray_temp,							-- inputValidArray: idem
+						fwdUnitOutput,
+						OPUreadyArray(3 downto 2),						-- nReadyArray : 	(B, A)
+						fwdUnitValidArray, fwdUnitReadyArray);			-- valid/readyArray:(B, A)
+			
 	resultbuffer : entity work.elasticBuffer(vanilla) generic map(32)
 			port map(	clk, reset,	
 						opResult, resBufferOut,
@@ -135,15 +136,16 @@ begin
 						adrW,  adrBufferOut,
 						IFDvalidArray(2), RFreadyArray(1),
 						adrBufferReady, adrBufferValid);
-	
-						
+					
 	-- signals for observation purpose
 	resOut <= opResult;
 	resValid <= OPUresultValid;
-
-
-
+	
 end singleFwdPath;
+
+
+
+
 
 
 
@@ -179,8 +181,8 @@ architecture fwdPathResolution of circuit is
 	signal resDelayChannelReady			: std_logic;
 	
 	--adrWDelayChannel signals
-	signal adrWDelayChannelOutput 		: vectorArray_t(4 downto 0)(31 downto 0);
-	signal adrWDelayChannelValidArray 	: bitArray_t(4 downto 0);
+	signal adrWDelayChannelOutput 		: vectorArray_t(3 downto 0)(31 downto 0);
+	signal adrWDelayChannelValidArray 	: bitArray_t(3 downto 0);
 	signal adrWDelayChannelReady		: std_logic;
 	
 	-- fwd path resolution units signals
@@ -209,9 +211,9 @@ begin
 	
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
-						adrB, adrA, adrWDelayChannelOutput(4), resDelayChannelOutput(3), 
+						adrB, adrA, adrWDelayChannelOutput(3), resDelayChannelOutput(3), 
 						(IFDvalidArray(4 downto 3), 				-- pValidArray :  (adrB, adrA, adrW, wrData)
-								adrWDelayChannelValidArray(4),
+								adrWDelayChannelValidArray(3),
 								resDelayChannelValidArray(3)),
 						FPRUreadyArray, 							-- nReadyArray
 						operandA, operandB, 
@@ -237,21 +239,21 @@ begin
 						OPUresultValid, RFreadyArray(0),-- pValid, nReady
 						resDelayChannelReady);			-- ready
 						
-	adrWDelayChannel : entity work.delayChannel(vanilla) generic map(32, 4)
+	adrWDelayChannel : entity work.delayChannel(vanilla) generic map(32, 3)
 			port map(	clk, reset,
 						adrW, adrWDelayChannelOutput,
 						adrWDelayChannelValidArray,
 						IFDvalidArray(2), RFreadyArray(1),
 						adrWDelayChannelReady);				
 						
-	FPRUadrValidArray_temp 	<= (adrWDelayChannelValidArray(4 downto 2), IFDvalidArray(4), IFDvalidArray(3));	-- adrValidArray : 	(oldest(mem bypass) -> newest WrAdress, readAdrB, readAdrA)
+	FPRUadrValidArray_temp 	<= (adrWDelayChannelValidArray(3 downto 1), IFDvalidArray(4), IFDvalidArray(3));	-- adrValidArray : 	(oldest(mem bypass) -> newest WrAdress, readAdrB, readAdrA)1
 	FPRUinputArray_temp 	<= (resDelayChannelOutput(3 downto 1), operandB, operandA); 						-- inputArray : 	(oldest(mem bypass) -> newest result, RF_B, RF_A)
 	FPRUinputValidArray_temp<= (resDelayChannelValidArray(3 downto 1), RFvalidArray(1), RFvalidArray(0)); 		-- inputValidArray:	(oldest(mem bypass) -> newest WrAdress, rfValid_B, rfValid_A)
 	
 	-- forwarding unit
 	FPRU : entity work.FwdPathResolutionUnit(vanilla) generic map(32, 5)
 			port map(	adrB, adrA,
-						adrWDelayChannelOutput(4 downto 2),		-- wAdrArray : 				(oldest(mem bypass) -> newest write addresses)
+						adrWDelayChannelOutput(3 downto 1),		-- wAdrArray : 				(oldest(mem bypass) -> newest write addresses)
 						FPRUadrValidArray_temp,					-- adrValidArray : 			(oldest(mem bypass) -> newest WrAdress, readAdrB, readAdrA)
 						fpruInputArray_temp, 					-- inputArray : 			(oldest(mem bypass) -> newest results, RF_B, RF_A)
 						FPRUinputValidArray_temp,				-- inputValidArray : 		(oldest(mem bypass) -> newest WrAdress, rfValid_B, rfValid_A)
