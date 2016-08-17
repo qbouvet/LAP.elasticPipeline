@@ -5,19 +5,41 @@
 -- and allows either of the branches to stall in the same manner
 
 
+---------------------------------------------------------------------
+-- simple 2-branches implementation from "elastic GCRAs" paper (p4)
+---------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use work.customTypes.all;
 
-
+entity branch is port(
+	condition,
+	pValid : in std_logic;
+	nReadyArray : in bitArray_t(1 downto 0);	-- (branch1, branch0)
+	validArray : out bitArray_t(1 downto 0);
+	ready : out std_logic);
+end branch;
 
 
 ---------------------------------------------------------------------
--- simple 2-branches implementation based on the "elastic GCRAs" paper (p4)
--- implements an additional set of control signals for 'condition'
+-- 2-branches implementation based on the "elastic GCRAs" paper (p4)
+-- has an additional set of control signals for 'condition'
 -- implemented as an additional join block
 ---------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use work.customTypes.all;
 
+
+
+
+
+
+
+
+---------------------------------------------------------------------
+-- hybrid architecture
+---------------------------------------------------------------------
 entity branchHybrid is port(
 	condition,
 	conditionValid,
@@ -55,10 +77,8 @@ end vanilla;
 
 
 
-
-
 ---------------------------------------------------------------------
--- simple 2-branches implementation from "elastic GCRAs" paper (p4)
+-- simple architecture
 ---------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
@@ -73,7 +93,6 @@ entity branch is port(
 end branch;
 
 architecture vanilla of branch is
-
 begin
 	
 	-- only one branch can announce ready, according to condition

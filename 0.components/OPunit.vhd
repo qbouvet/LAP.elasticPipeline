@@ -1,3 +1,27 @@
+--------------------------------------------------------------- Selector
+------------------------------------------------------------------------
+-- sub-component
+-- joins together controls signals of the results and chose the wanted 
+-- result according to oc. Basically a multiplexer with elastic control 
+-- signals
+-- replaced by the merge in branchmerge and branchHybrid versions
+------------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use work.customTypes.all;
+
+entity selectorBlock is
+port(	res1, res0, oc : in std_logic_vector(31 downto 0);
+		res : out std_logic_vector(31 downto 0);
+		pValidArray : in bitArray_t(2 downto 0);
+		nReady : in std_logic;
+		readyArray : out bitArray_t(2 downto 0);
+		valid : out std_logic);
+end selectorBlock;
+
+
+
 ---------------------------------------------------------------- OP unit
 ------------------------------------------------------------------------
 -- groups together the various operations we want + the selector block
@@ -59,7 +83,7 @@ begin
 						branchReadyArray);		-- readyArray		(data, condition)
 	
 	-- addi operation					
-	addi : entity work.op0(forwarding)
+	addi : entity work.op0(delay1)
 			port map(	clk, reset,
 						argA, argI, res0,
 						branchValidArray(0),-- pValid
@@ -89,9 +113,6 @@ begin
 						(branchReadyArray(0), mergeReadyArray(0)),	-- nReadyArray (branch, merge)
 						readyArray(0),
 						ocForkValidArray);							-- validArray (branch, merge)
-						
-	-- should add control signal for branch's condition and remove this ugly assignment
-	readyArray(0) <= '1';		
 
 end branchmergeHybrid;
 
@@ -182,7 +203,7 @@ begin
 						forkReady,				-- ready
 						fork_validArray);		-- validArray	
 	
-	addi : entity work.op0(delay1)
+	addi : entity work.op0(forwarding)
 			port map (	clk, reset,
 						argA, argI, res0, 
 						fork_validArray(0),			-- pValid
@@ -284,26 +305,7 @@ end elastic;
 
 
 
--- not used in elastic versions of OPunit
---------------------------------------------------------------- Selector
-------------------------------------------------------------------------
--- joins together controls signals of the results and chose the wanted 
--- result according to oc. Basically a multiplexer with elastic control 
--- signals
-------------------------------------------------------------------------
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-use work.customTypes.all;
 
-entity selectorBlock is
-port(	res1, res0, oc : in std_logic_vector(31 downto 0);
-		res : out std_logic_vector(31 downto 0);
-		pValidArray : in bitArray_t(2 downto 0);
-		nReady : in std_logic;
-		readyArray : out bitArray_t(2 downto 0);
-		valid : out std_logic);
-end selectorBlock;
 
 architecture vanilla of selectorBlock is
 begin
