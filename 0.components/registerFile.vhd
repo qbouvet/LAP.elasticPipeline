@@ -17,11 +17,11 @@ entity registerFile is port(
 	clk, reset : in std_logic;
 	adrB, adrA, adrW, wrData : in std_logic_vector(31 downto 0);
 	pValidArray : in bitArray_t(3 downto 0); -- adrB, adrA, adrW, wrData
-	nReadyArray : in bitArray_t(1 downto 0); -- a, b
+	nReadyArray : in bitArray_t(1 downto 0); -- b, a
 	
 	a, b  : out std_logic_vector(31 downto 0);	
 	readyArray : out bitArray_t(3 downto 0); -- adrB, adrA, adrW, wrData
-	validArray : out bitArray_t(1 downto 0)	 -- a, b
+	validArray : out bitArray_t(1 downto 0)	 -- b, a
 );
 end registerFile;
 
@@ -44,7 +44,6 @@ architecture elastic of registerFile is
 		-- signals needed for the writes' join
 	signal wrJoin_ready : std_logic; -- out of the join
 begin
-	
 	
 	-- reads and their control signals
 	a <= reg(to_integer(unsigned(adrA)));
@@ -73,7 +72,6 @@ begin
 				end if;
 			end if;
 		end if;
-	
 	end process writes;
 
 end elastic;

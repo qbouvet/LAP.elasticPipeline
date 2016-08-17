@@ -30,7 +30,7 @@ package customTypes is
 	--no longer used
 	
 	-- data type used in the register file
-	type register_t is array(63 downto 0) of std_logic_vector(31 downto 0);
+	type register_t is array(15 downto 0) of std_logic_vector(31 downto 0);
 	
 	
 	
