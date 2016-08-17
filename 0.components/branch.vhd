@@ -36,14 +36,14 @@ begin
 						branchReady,
 						joinValid,
 						readyArray);
-						
+
 	br : entity work.branch(vanilla)
 			port map(	condition,
 						joinValid,
 						nReadyArray,
 						validArray,
 						branchReady);
-		
+
 end vanilla;
 
 
