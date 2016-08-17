@@ -220,7 +220,7 @@ begin
 						RFreadyArray, 								-- readyArray : (adrB, adrA, adrW, wrData)
 						RFvalidArray);								-- validArray : (a, b)
 	
-	-- can use elastic, elasticEagerFork, branchmerge
+	-- can use elastic, elasticEagerFork, branchmerge, branchmergeHybrid
 	OPU : entity work.OPunit(elasticEagerFork)
 			port map(	clk, reset,
 						FPRUoutputArray(1), FPRUoutputArray(0), argI, oc, 	-- (argB, argA, argI, oc)
