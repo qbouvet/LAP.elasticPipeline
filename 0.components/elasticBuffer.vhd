@@ -141,9 +141,12 @@ architecture vanilla of elasticBuffer is
 	
 begin
 
-	controller : entity work.elasticBuffer_controller(registersMultiplexer) port map (
-		reset, clk, n_ready, p_valid, ready, valid, aux_wren, main_wren, mux_sel
-	);
+	controller : entity work.elasticBuffer_controller(registersMultiplexer) 
+			port map (	reset, clk, 
+						n_ready, p_valid, 
+						ready, valid, 
+						aux_wren, main_wren, 
+						mux_sel);
 	
 	-- auxiliairy register
 	process(aux_wren, clk, d_in, main_wren)

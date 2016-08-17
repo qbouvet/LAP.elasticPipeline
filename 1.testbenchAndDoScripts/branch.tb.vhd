@@ -1,3 +1,8 @@
+----------------------------------------------------------  tb_branch
+---------------------------------------------------------------------
+-- testbench for the (simple) branch block. Does not function with the 
+-- hybrid version (which has been test directly in circuit)
+
 library ieee;
 use ieee.std_logic_1164.all;
 use work.customTypes.all;
@@ -31,7 +36,7 @@ begin
 	resetSim;
 	if(not finished)then 
 	
-		newline;print("simulation starting");
+		newline;print("NB : testbench for branch, not branchHybrid");print("simulation starting");
 	
 		assert validArray = "00" report "(1)";
 		assert ready = '0' report "(2)";

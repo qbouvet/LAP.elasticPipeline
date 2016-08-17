@@ -21,7 +21,6 @@ port(	res1, res0, oc : in std_logic_vector(31 downto 0);
 end selectorBlock;
 
 
-
 ---------------------------------------------------------------- OP unit
 ------------------------------------------------------------------------
 -- groups together the various operations we want + the selector block
@@ -52,9 +51,16 @@ end OPunit;
 
 
 
+
+
+
+
+
+
 ------------------------------------------------------------------------
 -- version elastic control signals and an eager fork and a "big join" 
 -- that joins all arguments at first
+-- doesn't work well
 ------------------------------------------------------------------------
 architecture branchmergeHybrid of OPunit is
 	
@@ -83,7 +89,7 @@ begin
 						branchReadyArray);		-- readyArray		(data, condition)
 	
 	-- addi operation					
-	addi : entity work.op0(delay1)
+	addi : entity work.op0(forwarding)
 			port map(	clk, reset,
 						argA, argI, res0,
 						branchValidArray(0),-- pValid

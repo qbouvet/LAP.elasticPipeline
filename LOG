@@ -13,6 +13,7 @@ improve the branch/merge blocks
 				test the new versions of branch and merge
 		make a size-generic implementation
 				-> 	not really needed right now
+				
 		make a branch implementation with control signals for the condition ?
 				-> 	since in our circuit, we would put it right after the register file, it would be "first in the path" with no elastic buffers 
 						between the instructionFetchedDecoder (source of both  'condition' and the RF's read addresses), hence stalling 

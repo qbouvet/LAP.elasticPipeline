@@ -17,7 +17,8 @@ use ieee.std_logic_1164.all;
 use work.customTypes.all;
 
 entity FwdPathResolutionUnit is
-GENERIC ( DATASIZE 				: integer; INPUT_NB : integer );
+GENERIC ( 	DATASIZE 			: integer; 
+			INPUT_NB 			: integer );
 port(	readAdrB, readAdrA 		: in std_logic_vector(31 downto 0);
 		wAdrArray 				: in vectorArray_t(INPUT_NB-1 downto 2)(31 downto 0);			-- (oldest(mem bypass) -> newest write addresses)
 		adrValidArray			: in bitArray_t(INPUT_NB-1 downto 0);							-- (oldest(mem bypass) -> newest write addresses, readAdrB, readAdrA)

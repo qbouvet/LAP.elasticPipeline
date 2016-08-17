@@ -30,6 +30,15 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.customTypes.all;
 
+entity branchHybrid is port(
+	condition,
+	conditionValid,
+	dataValid 		: in std_logic;
+	nReadyArray 	: in bitArray_t(1 downto 0);	-- (branch1, branch0)
+	validArray 		: out bitArray_t(1 downto 0);	-- (branch1, branch0)
+	readyArray  	: out bitArray_t(1 downto 0));	-- (data, condition)
+end branchHybrid;
+
 
 
 
@@ -40,14 +49,6 @@ use work.customTypes.all;
 ---------------------------------------------------------------------
 -- hybrid architecture
 ---------------------------------------------------------------------
-entity branchHybrid is port(
-	condition,
-	conditionValid,
-	dataValid 		: in std_logic;
-	nReadyArray 	: in bitArray_t(1 downto 0);	-- (branch1, branch0)
-	validArray 		: out bitArray_t(1 downto 0);	-- (branch1, branch0)
-	readyArray  	: out bitArray_t(1 downto 0));	-- (data, condition)
-end branchHybrid;
 
 architecture vanilla of branchHybrid is
 	signal joinValid, branchReady 	: std_logic;
@@ -80,18 +81,6 @@ end vanilla;
 ---------------------------------------------------------------------
 -- simple architecture
 ---------------------------------------------------------------------
-library ieee;
-use ieee.std_logic_1164.all;
-use work.customTypes.all;
-
-entity branch is port(
-	condition,
-	pValid : in std_logic;
-	nReadyArray : in bitArray_t(1 downto 0);	-- (branch1, branch0)
-	validArray : out bitArray_t(1 downto 0);
-	ready : out std_logic);
-end branch;
-
 architecture vanilla of branch is
 begin
 	

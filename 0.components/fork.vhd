@@ -7,11 +7,11 @@ use ieee.std_logic_1164.all;
 use work.customTypes.all;
 
 entity forkN is generic( SIZE : integer);
-port(	clk, reset,		-- the eager implementation uses registers
-		pValid : in std_logic;
+port(	clk, reset,	-- the eager implementation uses registers
+		pValid 		: in std_logic;
 		nReadyArray : in bitArray_t(SIZE-1 downto 0);
-		ready : out std_logic;
-		validArray : out bitArray_t(SIZE-1 downto 0));
+		ready 		: out std_logic;
+		validArray 	: out bitArray_t(SIZE-1 downto 0));
 end forkN;
 
 ------------------------------------------------------------------------
