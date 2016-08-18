@@ -57,8 +57,6 @@ end OPunit;
 
 
 
-
-
 ------------------------------------------------------------------------
 -- version elastic control signals and an eager fork and a "big join" 
 -- that joins all arguments at first
@@ -91,7 +89,7 @@ begin
 						branchReadyArray);		-- readyArray		(data, condition)
 	
 	-- addi operation					
-	addi : entity work.op0(forwarding)
+	addi : entity work.op0(delay1)
 			port map(	clk, reset,
 						argA, argI, res0,
 						branchValidArray(0),-- pValid
@@ -123,6 +121,11 @@ begin
 						ocForkValidArray);							-- validArray (branch, merge)
 
 end branchmergeHybrid;
+
+
+
+
+
 
 ------------------------------------------------------------------------
 -- version elastic control signals and an eager fork and a "big join" 
@@ -186,8 +189,6 @@ end elasticEagerFork;
 
 
 
-
-
 ------------------------------------------------------------------------
 -- version with simple elastic control signals implementation
 -- NB : not sure if it works well
@@ -243,8 +244,6 @@ begin
 	readyArray(0) <= selector_readyArray(0);
 	
 end elastic;
-
-
 
 
 

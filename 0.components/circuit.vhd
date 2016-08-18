@@ -98,7 +98,7 @@ begin
 						RFvalidArray);													-- validArray		(operandB, operandA)
 	
 	-- can use elastic, elasticEagerFork, branchmerge (doesn't work well), branchmergeHybrid
-	OPU : entity work.OPunit(elastic)
+	OPU : entity work.OPunit(branchmergeHybrid)
 			port map(	clk, reset,
 						fwdUnitOutput(1), fwdUnitOutput(0), argI, oc, 
 						opResult, 
