@@ -96,7 +96,7 @@ begin
 	end process dataPrvd;
 	
 	
-	--instantiates the DUT
+	--instantiates the DUT		can be : 	elasticBasic, singleFwdPath, fwdPathResolution
 	circ : entity work.circuit(singleFwdPath) 
 			port map(	reset, clk, 
 						IFDready,	-- ready

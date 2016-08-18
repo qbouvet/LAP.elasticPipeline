@@ -60,7 +60,6 @@ end OPunit;
 ------------------------------------------------------------------------
 -- version elastic control signals and an eager fork and a "big join" 
 -- that joins all arguments at first
--- doesn't work well
 ------------------------------------------------------------------------
 architecture branchmergeHybrid of OPunit is
 	
@@ -89,7 +88,7 @@ begin
 						branchReadyArray);		-- readyArray		(data, condition)
 	
 	-- addi operation					
-	addi : entity work.op0(delay1)
+	addi : entity work.op0(forwarding)
 			port map(	clk, reset,
 						argA, argI, res0,
 						branchValidArray(0),-- pValid
@@ -156,7 +155,7 @@ begin
 						forkReady,				-- ready
 						fork_validArray);		-- validArray	
 	
-	addi : entity work.op0(forwarding)
+	addi : entity work.op0(delay1)
 			port map (	clk, reset,
 						argA, argI, res0, 
 						fork_validArray(0),			-- pValid
@@ -217,7 +216,7 @@ begin
 						forkReady,				-- ready
 						fork_validArray);		-- validArray	
 	
-	addi : entity work.op0(forwarding)
+	addi : entity work.op0(delay1)
 			port map (	clk, reset,
 						argA, argI, res0, 
 						fork_validArray(0),			-- pValid
@@ -258,6 +257,7 @@ end elastic;
 ------------------------------------------------------------------------
 -- version elastic control signals and an eager fork and a "big join" 
 -- that joins all arguments at first
+-- DOESN'T WORK WELL
 ------------------------------------------------------------------------
 architecture branchmerge of OPunit is
 	
@@ -283,7 +283,7 @@ begin
 						branchReady);			-- validArray 		(branch1, branch0)
 	
 	-- addi operation					
-	addi : entity work.op0(forwarding)
+	addi : entity work.op0(delay1)
 			port map(	clk, reset,
 						argA, argI, res0,
 						branchValidArray(0),-- pValid

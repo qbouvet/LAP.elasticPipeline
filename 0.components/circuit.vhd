@@ -98,7 +98,7 @@ begin
 						RFvalidArray);													-- validArray		(operandB, operandA)
 	
 	-- can use elastic, elasticEagerFork, branchmerge (doesn't work well), branchmergeHybrid
-	OPU : entity work.OPunit(branchmergeHybrid)
+	OPU : entity work.OPunit(elastic)
 			port map(	clk, reset,
 						fwdUnitOutput(1), fwdUnitOutput(0), argI, oc, 
 						opResult, 
@@ -111,7 +111,7 @@ begin
 	FUadrValidArray_temp <= (adrBufferValid, IFDvalidArray(4 downto 3));
 	FUinputArray_temp <= (resBufferOut, operandB, operandA);
 	FUinputValidArray_temp <= (resBufferValid, RFvalidArray);							
-	-- ugly typecast stuff - NB : wrAdrArray IS (NB_INPUT-1 downto 2) but it's not a problem to have the (_0_ => adrw)
+	-- ugly typecast stuff - NB : wrAdrArray IS (NB_INPUT-1 downto 2), so here (2 downto 2) but it's not a problem to have the (*0* => adrw)
 	wAdrToArray <= (0 => adrBufferOut);	-- necessary syntax for arrays of size 1	
 						
 	fwdUnit : entity work.forwardingUnit(vanilla) generic map(32, 3)
