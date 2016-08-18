@@ -54,7 +54,7 @@ architecture singleFwdPath of circuit is
 	signal operandA, operandB 					: std_logic_vector(31 downto 0);	
 	
 	--OP unit control signals
-	signal OPUresultValid 						: std_logic;
+	signal opResultValid 						: std_logic;
 	signal OPUreadyArray 						: bitArray_t(3 downto 0);
 	
 	--fwdUnit's signals
@@ -62,62 +62,61 @@ architecture singleFwdPath of circuit is
 	signal fwdUnitOutput						: vectorArray_t(1 downto 0)(31 downto 0); 	-- (b, a)
 			
 	-- signals that permit a single element to be considered as an array of size one
-	signal adrWarrayWrapper 					: vectorArray_t(1 downto 0)(31 downto 0);
+	signal wAdrToArray							: vectorArray_t(0 downto 0)(31 downto 0);
 	
 	-- ugly stuff the fixes the "questa unknown error"
 	signal FUinputArray_temp 					: vectorArray_t(2 downto 0)(31 downto 0);
-	signal FUadrValidArray_temp, FUinputValidArray_temp : bitArray_t(2 downto 0);
+	signal FUadrValidArray_temp, 
+			FUinputValidArray_temp 				: bitArray_t(2 downto 0);
 	
 	--elastic buffers' signal
-	signal resBufferOut 								: std_logic_vector(31 downto 0);
-	signal resBufferReady, resBufferValid				: std_logic;
-	signal adrBufferOut 								: std_logic_vector(31 downto 0);
-	signal adrBufferReady, adrBufferValid				: std_logic;
+	signal resBufferOut 						: std_logic_vector(31 downto 0);
+	signal resBufferReady, resBufferValid		: std_logic;
+	signal adrBufferOut 						: std_logic_vector(31 downto 0);
+	signal adrBufferReady, adrBufferValid		: std_logic;
 		
 begin
 
 	instructionFetchedDecoder : entity work.instructionFetcherDecoder(elastic) 
 			port map(	clk, reset, 
-						data, 						-- instr_in
+						data, 															-- instr_in
 						adrB, adrA, adrW, argI, oc, 
-						dataValid,					-- pValid
-						(RFreadyArray(3 downto 2), adrBufferReady, OPUreadyArray(1 downto 0)),	-- nReadyArray
-						IFDready, 					-- ready
-						IFDvalidArray,				-- ValidArray
+						dataValid,														-- pValid		
+						(RFreadyArray(3 downto 1), adrBufferReady, OPUreadyArray(0)),	-- nReadyArray 	(adrB, adrA, adrW, argI, oc)
+						IFDready, 														-- ready
+						IFDvalidArray,													-- ValidArray 	(adrB, adrA, adrW, argI, oc)
 						instrOut,	-- outputs the currentl instruction for observation purpose
 						ifdEmpty);	-- allows to decide when to stop the simulation
 	
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
 						adrB, adrA, adrBufferOut, resBufferOut, 
-						(IFDvalidArray(4 downto 3), adrBufferValid, resBufferValid),		-- pValidArray
-						fwdUnitReadyArray, 							-- nReadyArray
+						(IFDvalidArray(4 downto 3), adrBufferValid, resBufferValid),	-- pValidArray		(adrB, adrA, adrW, wrData)
+						fwdUnitReadyArray,		 										-- nReadyArray		(operandB, operandA)
 						operandA, operandB, 
-						RFreadyArray, 								-- readyArray
-						RFvalidArray);								-- validArray
+						RFreadyArray, 													-- readyArray		(adrB, adrA, adrW, wrData)
+						RFvalidArray);													-- validArray		(operandB, operandA)
 	
-	-- can use elastic, elasticEagerFork, branchmerge
-	OPU : entity work.OPunit(branchmerge)
+	-- can use elastic, elasticEagerFork, branchmerge (doesn't work well), branchmergeHybrid
+	OPU : entity work.OPunit(elastic)
 			port map(	clk, reset,
-						operandB, operandA, argI, oc, 
+						fwdUnitOutput(1), fwdUnitOutput(0), argI, oc, 
 						opResult, 
-						(fwdUnitValidArray, IFDvalidArray(1 downto 0)),	-- pValidArray
-						resBufferReady,		 							-- nReady
-						OPUresultValid,									-- valid
-						OPUreadyArray);
+						(fwdUnitValidArray, IFDvalidArray(1 downto 0)),	-- pValidArray		(argB, argA, argI, oc)
+						resBufferReady, 								-- nReady			
+						opResultValid,									-- valid
+						OPUreadyArray);									-- readyArray		(argB, argA, argI, oc)
+
+	-- ugly stuff that fixes the "questa unknown error"
+	FUadrValidArray_temp <= (adrBufferValid, IFDvalidArray(4 downto 3));
+	FUinputArray_temp <= (resBufferOut, operandB, operandA);
+	FUinputValidArray_temp <= (resBufferValid, RFvalidArray);							
+	-- ugly typecast stuff - NB : wrAdrArray IS (NB_INPUT-1 downto 2) but it's not a problem to have the (_0_ => adrw)
+	wAdrToArray <= (0 => adrBufferOut);	-- necessary syntax for arrays of size 1	
 						
-						
-	-- ugly typecast stuff
-	adrWarrayWrapper <= (adrW, X"00000000");	
-	
-	-- ugly stuff the fixes the "questa unknown error"
-	FUadrValidArray_temp <= (IFDvalidArray(2), IFDvalidArray(4 downto 3));
-	FUinputArray_temp <= (opResult, operandB, operandA);
-	FUinputValidArray_temp <= (OPUresultValid, RFvalidArray);		
-						
-	fwdUnit : entity work.fwdPathResolutionUnit(vanilla) generic map(32, 3)
+	fwdUnit : entity work.forwardingUnit(vanilla) generic map(32, 3)
 			port map(	adrB, adrA,
-						adrWarrayWrapper(1 downto 1),
+						wAdrToArray,
 						FUadrValidArray_temp,							-- adrValidArray : 	(adrW, adrB, adrA)
 						FUinputArray_temp,								-- inputArray : 	(result, rf_b, rf_a)
 						FUinputValidArray_temp,							-- inputValidArray: idem
@@ -128,10 +127,10 @@ begin
 	resultbuffer : entity work.elasticBuffer(vanilla) generic map(32)
 			port map(	clk, reset,	
 						opResult, resBufferOut,
-						OPUresultValid, RFreadyArray(0),
+						opResultValid, RFreadyArray(0),
 						resBufferReady, resBufferValid);
 	
-	adrBuffer : entity work.elasticBuffer(vanilla) generic map(32)
+	wAdressBuffer : entity work.elasticBuffer(vanilla) generic map(32)
 			port map(	clk, reset,	
 						adrW,  adrBufferOut,
 						IFDvalidArray(2), RFreadyArray(1),
@@ -139,7 +138,7 @@ begin
 					
 	-- signals for observation purpose
 	resOut <= opResult;
-	resValid <= OPUresultValid;
+	resValid <= opResultValid;
 	
 end singleFwdPath;
 
@@ -200,14 +199,14 @@ begin
 
 	instructionFetchedDecoder : entity work.instructionFetcherDecoder(elastic) 
 			port map(	clk, reset, 
-						data, 						-- instr_in
+						data, 									-- instr_in
 						adrB, adrA, adrW, argI, oc, 
-						dataValid,					-- pValid
-						(RFreadyArray(3 downto 2), 	-- nReadyArray : (adrB, adrA, adrW, argI, oc)
+						dataValid,								-- pValid
+						(RFreadyArray(3 downto 2), 				-- nReadyArray : (adrB, adrA, adrW, argI, oc)
 								adrWDelayChannelReady,
 								OPUreadyArray(1 downto 0)),
-						IFDready, 					-- ready
-						IFDvalidArray,				-- ValidArray : (adrB, adrA, adrW, argI, oc)
+						IFDready, 								-- ready
+						IFDvalidArray,							-- ValidArray : (adrB, adrA, adrW, argI, oc)
 						instrOut,	-- outputs the currentl instruction for observation purpose
 						ifdEmpty);	-- allows to decide when to stop the simulation
 	
@@ -248,12 +247,13 @@ begin
 						IFDvalidArray(2), RFreadyArray(1),
 						adrWDelayChannelReady);				
 						
-	FPRUadrValidArray_temp 	<= (adrWDelayChannelValidArray(3 downto 1), IFDvalidArray(4), IFDvalidArray(3));	-- adrValidArray : 	(oldest(mem bypass) -> newest WrAdress, readAdrB, readAdrA)1
-	FPRUinputArray_temp 	<= (resDelayChannelOutput(3 downto 1), operandB, operandA); 						-- inputArray : 	(oldest(mem bypass) -> newest result, RF_B, RF_A)
-	FPRUinputValidArray_temp<= (resDelayChannelValidArray(3 downto 1), RFvalidArray(1), RFvalidArray(0)); 		-- inputValidArray:	(oldest(mem bypass) -> newest WrAdress, rfValid_B, rfValid_A)
+	-- ugly stuff that fixes the "unkown questa error"					
+	FPRUadrValidArray_temp 	<= (adrWDelayChannelValidArray(3 downto 1), IFDvalidArray(4 downto 3));	-- adrValidArray : 	(oldest(mem bypass) -> newest WrAdress, readAdrB, readAdrA)1
+	FPRUinputArray_temp 	<= (resDelayChannelOutput(3 downto 1), operandB, operandA); 			-- inputArray : 	(oldest(mem bypass) -> newest result, RF_B, RF_A)
+	FPRUinputValidArray_temp<= (resDelayChannelValidArray(3 downto 1), RFvalidArray(1 downto 0)); 	-- inputValidArray:	(oldest(mem bypass) -> newest WrAdress, rfValid_B, rfValid_A)
 	
 	-- forwarding unit
-	FPRU : entity work.FwdPathResolutionUnit(vanilla) generic map(32, 5)
+	FPRU : entity work.forwardingUnit(vanilla) generic map(32, 5)
 			port map(	adrB, adrA,
 						adrWDelayChannelOutput(3 downto 1),		-- wAdrArray : 				(oldest(mem bypass) -> newest write addresses)
 						FPRUadrValidArray_temp,					-- adrValidArray : 			(oldest(mem bypass) -> newest WrAdress, readAdrB, readAdrA)
@@ -296,55 +296,50 @@ end fwdPathResolution;
 architecture elasticBasic of circuit is
 	
 	--output and control signals of the IFD
-	signal adrA, adrB, adrW, argI, oc : std_logic_vector(31 downto 0);
-	signal IFDvalidArray : bitArray_t(4 downto 0);
+	signal adrA, adrB, adrW, argI, oc 	: std_logic_vector(31 downto 0);
+	signal IFDvalidArray 				: bitArray_t(4 downto 0);
 	-- result of the operation, for writeback
-	signal opResult : std_logic_vector(31 downto 0);
+	signal opResult 					: std_logic_vector(31 downto 0);
 	-- registerFile control signals
-	signal RFreadyArray : bitArray_t(3 downto 0);
-	signal RFvalidArray : bitArray_t(1 downto 0);
-	signal RFreadyForWrdata : std_logic;
+	signal RFreadyArray 				: bitArray_t(3 downto 0);
+	signal RFvalidArray 				: bitArray_t(1 downto 0);
+	signal RFreadyForWrdata				: std_logic;
 	-- registerFile output
-	signal operandA, operandB : std_logic_vector(31 downto 0);	
+	signal operandA, operandB		 	: std_logic_vector(31 downto 0);	
 	--OP unit control signals
-	signal OPUresultValid : std_logic;
-	signal OPUreadyArray : bitArray_t(3 downto 0);
+	signal opResultValid 				: std_logic;
+	signal OPUreadyArray 				: bitArray_t(3 downto 0);
 	
 begin
 
 	instructionFetchedDecoder : entity work.instructionFetcherDecoder(elastic) 
 			port map(	clk, reset, 
-						data, 						-- instr_in
+						data, 													-- instr_in
 						adrB, adrA, adrW, argI, oc, 
-						dataValid,					-- pValid
-						(RFreadyArray(3 downto 1), OPUreadyArray(1 downto 0)),	-- nReadyArray
-						IFDready, 					-- ready
-						IFDvalidArray,				-- ValidArray
+						dataValid,												-- pValid		
+						(RFreadyArray(3 downto 1), OPUreadyArray(1 downto 0)),	-- nReadyArray 	(adrB, adrA, adrW, argI, oc)
+						IFDready, 												-- ready
+						IFDvalidArray,											-- ValidArray 	(adrB, adrA, adrW, argI, oc)
 						instrOut,	-- outputs the currentl instruction for observation purpose
 						ifdEmpty);	-- allows to decide when to stop the simulation
 	
 	regFile : entity work.registerFile(elastic)
 			port map(	clk, reset, 
 						adrB, adrA, adrW, opResult, 
-						(IFDvalidArray(4 downto 2), OPUresultValid),-- pValidArray
-						OPUreadyArray(3 downto 2), 					-- nReadyArray
+						(IFDvalidArray(4 downto 2), opResultValid),	-- pValidArray		(adrB, adrA, adrW, wrData)
+						OPUreadyArray(3 downto 2), 					-- nReadyArray		(operandB, operandA)
 						operandA, operandB, 
-						RFreadyArray, 								-- readyArray
-						RFvalidArray);								-- validArray
-	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
+						RFreadyArray, 								-- readyArray		(adrB, adrA, adrW, wrData)
+						RFvalidArray);								-- validArray		(operandB, operandA)
 	
 	-- can use elastic, elasticEagerFork, branchmerge
 	OPU : entity work.OPunit(elasticEagerFork)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
 						opResult, 
-						(RFvalidArray, IFDvalidArray(1 downto 0)),	-- pValidArray
-						RFreadyArray(0), 							-- nReady
-						OPUresultValid,								-- valid
-						OPUreadyArray);
-						
-	-- signals for observation purpose
-	resOut <= opResult;
-	resValid <= OPUresultValid;
+						(RFvalidArray, IFDvalidArray(1 downto 0)),	-- pValidArray		(argB, argA, argI, oc)
+						RFreadyArray(0), 							-- nReady			
+						opResultValid,								-- valid
+						OPUreadyArray);								-- readyArray		(argB, argA, argI, oc)
 						
 end elasticBasic;

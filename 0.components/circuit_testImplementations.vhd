@@ -217,7 +217,7 @@ begin
 						RFreadyArray, 								-- readyArray
 						RFvalidArray);								-- validArray
 	
-	OPU : entity work.OPunit(branchmerge)
+	OPU : entity work.OPunit(branchmergeHybrid)
 			port map(	clk, reset,
 						operandB, operandA, argI, delayChannelOutput(3), 
 						opResult, 

@@ -327,6 +327,14 @@ begin
 		
 		assert validArray = "01" report "(10)";		
 		assert outputArray(0) = X"00000001" report "(11)";
+		adrValidArray <= "111";					-- try to replicate the "resolving when should not" issue we have in the circuit
+		inputValidArray <= "111";					
+		readAdrA <= X"00000001";				
+		readAdrB <= X"00000000";				
+		wAdrArray <= (0 => X"00000005"); 
+		waitPeriod;
+		
+		assert outputArray = (X"00000014",X"0000000A");
 		waitPeriod;
 		
 		

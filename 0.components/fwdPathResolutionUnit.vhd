@@ -16,7 +16,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.customTypes.all;
 
-entity FwdPathResolutionUnit is
+entity forwardingUnit is
 GENERIC ( 	DATASIZE 			: integer; 
 			INPUT_NB 			: integer );
 port(	readAdrB, readAdrA 		: in std_logic_vector(31 downto 0);
@@ -30,9 +30,9 @@ port(	readAdrB, readAdrA 		: in std_logic_vector(31 downto 0);
 		nReadyArray				: in bitArray_t(1 downto 0);									-- (operandB, operandA)
 		validArray, readyArray	: out bitArray_t(1 downto 0)									-- (operandB, operandA)
 );
-end FwdPathResolutionUnit;
+end forwardingUnit;
 
-architecture vanilla of FwdPathResolutionUnit is
+architecture vanilla of forwardingUnit is
 begin
 
 	-- these control signals should be directly forwarded to the register file, regardless of where we read from

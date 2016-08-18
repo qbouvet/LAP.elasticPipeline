@@ -4,7 +4,7 @@
 -- joins together controls signals of the results and chose the wanted 
 -- result according to oc. Basically a multiplexer with elastic control 
 -- signals
--- replaced by the merge in branchmerge and branchHybrid versions
+-- replaced by the merge in branchmerge and branchmergeHybrid versions
 ------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
@@ -25,10 +25,11 @@ end selectorBlock;
 ------------------------------------------------------------------------
 -- groups together the various operations we want + the selector block
 -- architectures : 	- elasticEagerFork
---					- branchmerge
---					- elastic (maybe not functionnal)
+--					- branchmergeHybrid	
+--					- branchmerge		(doesn't work whenever some latency changes in the circuit)
+--					- elastic 			(maybe not functionnal)
 --					- debug 1-4
---					- elastic2 (debug)
+--					- elastic2 			(debug)
 ------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
@@ -46,6 +47,7 @@ entity OPunit is port(
 	valid : out std_logic;
 	readyArray : out bitArray_t(3 downto 0));
 end OPunit;
+
 
 
 
@@ -122,64 +124,6 @@ begin
 
 end branchmergeHybrid;
 
-
-
-
-------------------------------------------------------------------------
--- version elastic control signals and an eager fork and a "big join" 
--- that joins all arguments at first
-------------------------------------------------------------------------
-architecture branchmerge of OPunit is
-	
-	signal joinArgsValid, branchReady, mergeReady, addiReady, addiValid, op1Ready, op1Valid : std_logic;
-	signal branchValidArray, mergeReadyArray : bitArray_t(1 downto 0);
-	signal res0, res1  : std_logic_vector(31 downto 0);
-
-begin
-
-	-- join all arguments' control signals at first
-	joinArgs : entity work.joinN(vanilla) generic map (3)
-			port map(	pValidArray(3 downto 1),	-- pValid
-						branchReady,				-- nReady
-						joinArgsValid,
-						readyArray(3 downto 1));
-						
-	-- sends arguments to the wanted operation (only to it)
-	branchArgs : entity work.branch(vanilla)
-			port map(	oc(6) and oc(5),		-- condition : op1
-						joinArgsValid,			-- pValid		
-						(op1Ready, addiReady),	-- nReadyArray		(branch1, branch0)
-						branchValidArray, 		-- ready
-						branchReady);			-- validArray 		(branch1, branch0)
-	
-	-- addi operation					
-	addi : entity work.op0(forwarding)
-			port map(	clk, reset,
-						argA, argI, res0,
-						branchValidArray(0),-- pValid
-						mergeReadyArray(0),	-- nReady
-						addiReady, addiValid);	-- (ready, valid)
-	-- other operation					
-	sampleOp1 : entity work.op1(forwarding)
-			port map(	clk, reset,
-						argA, argB, res1,
-						branchValidArray(1),-- pValid
-						mergeReadyArray(1),	-- nReady
-						op1Ready, op1Valid);-- (ready, valid)
-						
-	-- merge the results
-	mergeRes : entity work.merge(vanilla)
-			port map(	res1, res0, res,
-						(op1Valid, addiValid),	-- pValidArray
-						nReady,					-- nReady
-						valid,					-- valid
-						mergeReadyArray);		-- readyArray		
-						
-	-- should add control signal for branch's condition and remove this ugly assignment
-	readyArray(0) <= '1';		
-
-end branchmerge;
-
 ------------------------------------------------------------------------
 -- version elastic control signals and an eager fork and a "big join" 
 -- that joins all arguments at first
@@ -236,6 +180,12 @@ begin
 	readyArray(0) <= selector_readyArray(0);
 	
 end elasticEagerFork;
+
+
+
+
+
+
 
 
 ------------------------------------------------------------------------
@@ -306,6 +256,60 @@ end elastic;
 
 
 
+------------------------------------------------------------------------
+-- version elastic control signals and an eager fork and a "big join" 
+-- that joins all arguments at first
+------------------------------------------------------------------------
+architecture branchmerge of OPunit is
+	
+	signal joinArgsValid, branchReady, mergeReady, addiReady, addiValid, op1Ready, op1Valid : std_logic;
+	signal branchValidArray, mergeReadyArray : bitArray_t(1 downto 0);
+	signal res0, res1  : std_logic_vector(31 downto 0);
+
+begin
+
+	-- join all arguments' control signals at first
+	joinArgs : entity work.joinN(vanilla) generic map (3)
+			port map(	pValidArray(3 downto 1),	-- pValid
+						branchReady,				-- nReady
+						joinArgsValid,
+						readyArray(3 downto 1));
+						
+	-- sends arguments to the wanted operation (only to it)
+	branchArgs : entity work.branch(vanilla)
+			port map(	oc(6) and oc(5),		-- condition : op1
+						joinArgsValid,			-- pValid		
+						(op1Ready, addiReady),	-- nReadyArray		(branch1, branch0)
+						branchValidArray, 		-- ready
+						branchReady);			-- validArray 		(branch1, branch0)
+	
+	-- addi operation					
+	addi : entity work.op0(forwarding)
+			port map(	clk, reset,
+						argA, argI, res0,
+						branchValidArray(0),-- pValid
+						mergeReadyArray(0),	-- nReady
+						addiReady, addiValid);	-- (ready, valid)
+	-- other operation					
+	sampleOp1 : entity work.op1(forwarding)
+			port map(	clk, reset,
+						argA, argB, res1,
+						branchValidArray(1),-- pValid
+						mergeReadyArray(1),	-- nReady
+						op1Ready, op1Valid);-- (ready, valid)
+						
+	-- merge the results
+	mergeRes : entity work.merge(vanilla)
+			port map(	res1, res0, res,
+						(op1Valid, addiValid),	-- pValidArray
+						nReady,					-- nReady
+						valid,					-- valid
+						mergeReadyArray);		-- readyArray		
+						
+	-- should add control signal for branch's condition and remove this ugly assignment
+	readyArray(0) <= '1';		
+
+end branchmerge;
 
 
 
@@ -313,6 +317,26 @@ end elastic;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------
+-- architecture for the selectorBlock
+------------------------------------------------------------------------
 architecture vanilla of selectorBlock is
 begin
 
