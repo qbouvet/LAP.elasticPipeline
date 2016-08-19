@@ -115,14 +115,22 @@ begin
 						op1Ready, op1Valid);-- (ready, valid)
 						
 	-- merge the results
-	mergeRes : entity work.mergeHybrid(vanilla)
-			port map(	res1, res0, res,
+--	mergeRes : entity work.mergeHybrid(vanilla)
+--			port map(	res1, res0, res,
+--						oc(6) and oc(5),							-- condition
+--						(op1Valid, addiValid, ocForkValidArray(0)),	-- pValidArray
+--						nReady,										-- nReady
+--						valid,										-- valid
+--						mergeReadyArray);							-- readyArray	(res1, res0, condition)
+	mergeRes : entity work.mergeHybridBuffered(vanilla)
+			port map(	clk,reset,
+						res1, res0, res,
 						oc(6) and oc(5),							-- condition
 						(op1Valid, addiValid, ocForkValidArray(0)),	-- pValidArray
 						nReady,										-- nReady
 						valid,										-- valid
-						mergeReadyArray);							-- readyArray	(res1, res0, condition)
-						
+						mergeReadyArray);							-- readyArray	(res1, res0, condition)						
+												
 	-- fork 'oc' to the branch and merge		
 	forkOpCode : entity work.forkN(eager) generic map(2)
 			port map(	clk, reset,	
