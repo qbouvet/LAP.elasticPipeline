@@ -55,8 +55,7 @@ begin
 		if readAdrA = X"00000000" then
 			outputArray(0) <= inputArray(0);
 			validArray(0) <= inputValidArray(0);
-		elsif (readAdrA = wAdrArray(i)) then
-			report "thingy";
+		elsif (readAdrA = wAdrArray(i) and adrValidArray(i)='1') then
 			-- select the correct input   -   we select only if the adress is valid
 			outputArray(0) <= inputArray(i);	
 			-- forward its 'valid0' control signal
@@ -70,7 +69,7 @@ begin
 		if readAdrB = X"00000000" then
 			outputArray(1) <= inputArray(1);
 			validArray(1) <= inputValidArray(1);
-		elsif (readAdrB=wAdrArray(i)) then
+		elsif (readAdrB=wAdrArray(i) and adrValidArray(i)='1') then
 			-- select the correct input   -   we select only if the adress is valid
 			outputArray(1) <= inputArray(i);	
 			-- forward its 'valid0' control signal
