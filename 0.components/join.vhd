@@ -8,10 +8,10 @@ use work.customTypes.all;
 
 entity joinN is generic (SIZE : integer);
 port (
-	pValidArray : in bitArray_t(SIZE-1 downto 0);
-	nReady : in std_logic;
-	valid : out std_logic;
-	readyArray : out bitArray_t(SIZE-1 downto 0));	
+	pValidArray 	: in bitArray_t(SIZE-1 downto 0);
+	nReady 			: in std_logic;
+	valid 			: out std_logic;
+	readyArray 		: out bitArray_t(SIZE-1 downto 0));	
 end joinN;
 
 architecture vanilla of joinN is
@@ -37,6 +37,74 @@ end vanilla;
 
 
 
+--------------------------------------------------------------  joinN
+---------------------------------------------------------------------
+-- this version of the joinN stores each of its inputs in an elastic 
+-- buffer. It adds a delay of 1 cycle, and needs the actual data
+-- (not only its control signals) as inputs/outputs.
+-- made to try to fix the "fwdPathResolution" version of "circuit"
+---------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use work.customTypes.all;
+
+entity bufferedJoinN is generic (SIZE : integer);
+port (
+	clk, reset		: in std_logic;
+	dataIn 			: in vectorArray_t(SIZE-1 downto 0)(31 downto 0);
+	dataOut 		: out vectorArray_t(SIZE-1 DOWNTO 0)(31 downto 0);
+	pValidArray 	: in bitArray_t(SIZE-1 downto 0);
+	nReady 			: in std_logic;
+	valid 			: out std_logic;
+	readyArray 		: out bitArray_t(SIZE-1 downto 0));	
+end bufferedJoinN;
+
+architecture vanilla of bufferedJoinN is
+	signal allPValid							: std_logic;
+	signal bufferOut 							: vectorArray_t(SIZE-1 downto 0)(31 downto 0);
+	signal bufferValidArray, joinReadyArray 	: bitArray_t(SIZE-1 downto 0);
+	
+begin	
+	-- generate buffers for all inputs
+	buffersGen : for i in SIZE-1 downto 0 generate
+		inputBuffer : entity work.elasticBuffer(vanilla) generic map(33)
+					port map(	clk, reset,
+								dataIn(i), dataOut(i),
+								pValidArray(i), joinReadyArray(i),
+								readyArray(i), bufferValidArray(i));
+	end generate;
+	
+	-- maps buffers to a joinN
+	joinBuffers : entity work.joinN(vanilla) generic map(SIZE)
+			port map(	bufferValidArray, nReady,
+						valid, joinReadyArray);
+			
+end vanilla;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------- Older versions, kept for backup purpose only
+---------------------------------------------------------------------
+---------------------------------------------------------------------
 
 
 
@@ -81,13 +149,6 @@ begin
 	ready1 <= (p_valid0 and p_valid1 and n_ready); 
 
 end try;
-
-
-
-
-
-
-
 
 
 --------------------------------------------------------------  join3
