@@ -63,18 +63,29 @@ end OPunit;
 ------------------------------------------------------------------------
 architecture branchmergeHybrid of OPunit is
 	
+	-- standard signals
 	signal joinArgsValid, addiReady, addiValid, op1Ready, 
 			op1Valid			 							: std_logic;
 	signal branchValidArray, branchReadyArray, ocForkValidArray	: bitArray_t(1 downto 0);
 	signal mergeReadyArray 									: bitArray_t(2 downto 0);	-- (data1, data0, condition)
 	signal res0, res1 										: std_logic_vector(31 downto 0);
+	
+	-- signals for the bufferedJoin
+	signal bufferedJoinOutput								: vectorArray_t(2 downto 0)(31 downto 0);	-- (argB, argA, argI)
 
 begin
 
 	-- join all arguments' control signals at first
-	joinArgs : entity work.joinN(vanilla) generic map (3)
-			port map(	pValidArray(3 downto 1),	-- pValid
-						branchReadyArray(1),		-- nReady
+--	joinArgs : entity work.joinN(vanilla) generic map (3)
+--			port map(	pValidArray(3 downto 1),	-- pValid
+--						branchReadyArray(1),		-- nReady
+--						joinArgsValid,
+--						readyArray(3 downto 1));
+	joinArgs : entity work.bufferedJoinN(vanilla) generic map (3)
+			port map(	clk, reset,
+						(argB, argA, argI), bufferedJoinOutput,	-- dataIn, dataOut	: 	(argB, argA, argI)
+						pValidArray(3 downto 1),				-- pValid
+						branchReadyArray(1),					-- nReady
 						joinArgsValid,
 						readyArray(3 downto 1));
 						
@@ -87,8 +98,9 @@ begin
 						branchValidArray, 		-- validArray 		(branch1, branch0)
 						branchReadyArray);		-- readyArray		(data, condition)
 	
-	-- addi operation					
-	addi : entity work.op0(forwarding)
+	-- addi operation	
+	-- can be : forwarding, delay1				
+	addi : entity work.op0(delay1)
 			port map(	clk, reset,
 						argA, argI, res0,
 						branchValidArray(0),-- pValid
@@ -155,7 +167,8 @@ begin
 						forkReady,				-- ready
 						fork_validArray);		-- validArray	
 	
-	addi : entity work.op0(delay1)
+	-- can be : forwarding, delay1
+	addi : entity work.op0(forwarding)
 			port map (	clk, reset,
 						argA, argI, res0, 
 						fork_validArray(0),			-- pValid
@@ -216,7 +229,8 @@ begin
 						forkReady,				-- ready
 						fork_validArray);		-- validArray	
 	
-	addi : entity work.op0(delay1)
+	-- can be : forwarding, delay1
+	addi : entity work.op0(forwarding)
 			port map (	clk, reset,
 						argA, argI, res0, 
 						fork_validArray(0),			-- pValid
@@ -282,8 +296,9 @@ begin
 						branchValidArray, 		-- ready
 						branchReady);			-- validArray 		(branch1, branch0)
 	
-	-- addi operation					
-	addi : entity work.op0(delay1)
+	-- addi operation			
+	-- can be : forwarding, delay1		
+	addi : entity work.op0(forwarding)
 			port map(	clk, reset,
 						argA, argI, res0,
 						branchValidArray(0),-- pValid
