@@ -85,9 +85,9 @@
 # read r6							-> 180'000
 00110001100000000000000000000000
 
+#finish								-> 0		NB : oddly, having the instruction only once gives weird results at the end, but twice prosuces ok results
 00000000000000000000000000000000
 00000000000000000000000000000000
-#finish								-> 0
 
 
 
