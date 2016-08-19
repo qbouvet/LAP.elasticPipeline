@@ -35,12 +35,12 @@ end forwardingUnit;
 architecture vanilla of forwardingUnit is
 begin
 
-	-- these control signals should be directly forwarded to the register file, regardless of where we read from
+	process(readAdrA, readAdrB, wAdrArray, adrValidArray, inputArray, inputValidArray, nReadyArray)
+	begin
+	-- By default, we forward the control signals, unless we resolve an adress where the fwd path has invalid data (cf later)
 	readyArray(0) <= nReadyArray(0);
 	readyArray(1) <= nReadyArray(1);
-
-	process(readAdrA, readAdrB, wAdrArray, adrValidArray, inputArray, inputValidArray)
-	begin
+	
 	-- by default, we pick the data from the register file for operandA and operandB
 	outputArray(0) <= inputArray(0);
 	validArray(0) <= inputValidArray(0);
@@ -49,27 +49,36 @@ begin
 	
 	-- but if any more recent result matches, we'll use it instead									
 	-- order of exploration : oldest (mem bypass) to newest instructions			
-	-- input(0) and input(1) are register file's operandA and oerandB
+	-- input(0) and input(1) are register file's operandA and operandB
 	for i in INPUT_NB-1 downto 2 loop
 		-- if A's address matches
 		if readAdrA = X"00000000" then
 			outputArray(0) <= inputArray(0);
 			validArray(0) <= inputValidArray(0);
-		elsif(readAdrA = wAdrArray(i)) then
-			-- select the correct input
+		elsif (readAdrA = wAdrArray(i)) then
+			report "thingy";
+			-- select the correct input   -   we select only if the adress is valid
 			outputArray(0) <= inputArray(i);	
 			-- forward its 'valid0' control signal
 			validArray(0) <= inputValidArray(i) and adrValidArray(i);
+			-- change the ready control signal if the fwd path doesn't provide valid data 	(fix for circuit problem)
+			if (inputValidArray(i) and adrValidArray(i)) = '0' then
+				readyArray(0) <= '0';
+			end if;
 		end if;
 		-- if B's address matches
 		if readAdrB = X"00000000" then
 			outputArray(1) <= inputArray(1);
 			validArray(1) <= inputValidArray(1);
-		elsif(readAdrB = wAdrArray(i)) then
-			-- select the correct input
+		elsif (readAdrB=wAdrArray(i)) then
+			-- select the correct input   -   we select only if the adress is valid
 			outputArray(1) <= inputArray(i);	
 			-- forward its 'valid0' control signal
 			validArray(1) <= inputValidArray(i) and adrValidArray(i);
+			-- change the ready control signal if the fwd path doesn't provide valid data 	(fix for circuit problem, hopefully)
+			if (inputValidArray(i) and adrValidArray(i)) = '0' then
+				readyArray(1) <= '0';
+			end if;
 		end if;
 	end loop;
 	end process;

@@ -76,18 +76,18 @@ architecture branchmergeHybrid of OPunit is
 begin
 
 	-- join all arguments' control signals at first
---	joinArgs : entity work.joinN(vanilla) generic map (3)
---			port map(	pValidArray(3 downto 1),	-- pValid
---						branchReadyArray(1),		-- nReady
---						joinArgsValid,
---						readyArray(3 downto 1));
-	joinArgs : entity work.bufferedJoinN(vanilla) generic map (3)
-			port map(	clk, reset,
-						(argB, argA, argI), bufferedJoinOutput,	-- dataIn, dataOut	: 	(argB, argA, argI)
-						pValidArray(3 downto 1),				-- pValid
-						branchReadyArray(1),					-- nReady
+	joinArgs : entity work.joinN(vanilla) generic map (3)
+			port map(	pValidArray(3 downto 1),	-- pValid
+						branchReadyArray(1),		-- nReady
 						joinArgsValid,
 						readyArray(3 downto 1));
+--	joinArgs : entity work.bufferedJoinN(vanilla) generic map (3)
+--			port map(	clk, reset,
+--						(argB, argA, argI), bufferedJoinOutput,	-- dataIn, dataOut	: 	(argB, argA, argI)
+--						pValidArray(3 downto 1),				-- pValid
+--						branchReadyArray(1),					-- nReady
+--						joinArgsValid,
+--						readyArray(3 downto 1));
 						
 	-- sends arguments to the wanted operation (only to it)
 	branchArgs : entity work.branchHybrid(vanilla)
@@ -115,21 +115,21 @@ begin
 						op1Ready, op1Valid);-- (ready, valid)
 						
 	-- merge the results
---	mergeRes : entity work.mergeHybrid(vanilla)
---			port map(	res1, res0, res,
---						oc(6) and oc(5),							-- condition
---						(op1Valid, addiValid, ocForkValidArray(0)),	-- pValidArray
---						nReady,										-- nReady
---						valid,										-- valid
---						mergeReadyArray);							-- readyArray	(res1, res0, condition)
-	mergeRes : entity work.mergeHybridBuffered(vanilla)
-			port map(	clk,reset,
-						res1, res0, res,
+	mergeRes : entity work.mergeHybrid(vanilla)
+			port map(	res1, res0, res,
 						oc(6) and oc(5),							-- condition
 						(op1Valid, addiValid, ocForkValidArray(0)),	-- pValidArray
 						nReady,										-- nReady
 						valid,										-- valid
-						mergeReadyArray);							-- readyArray	(res1, res0, condition)						
+						mergeReadyArray);							-- readyArray	(res1, res0, condition)
+--	mergeRes : entity work.mergeHybridBuffered(vanilla)
+--			port map(	clk,reset,
+--						res1, res0, res,
+--						oc(6) and oc(5),							-- condition
+--						(op1Valid, addiValid, ocForkValidArray(0)),	-- pValidArray
+--						nReady,										-- nReady
+--						valid,										-- valid
+--						mergeReadyArray);							-- readyArray	(res1, res0, condition)						
 												
 	-- fork 'oc' to the branch and merge		
 	forkOpCode : entity work.forkN(eager) generic map(2)
