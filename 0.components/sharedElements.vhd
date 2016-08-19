@@ -32,6 +32,8 @@ package customTypes is
 	-- data type used in the register file
 	type register_t is array(15 downto 0) of std_logic_vector(31 downto 0);
 	
+	-- useful for reasons
+	signal zero : std_logic_vector(31 downto 0) := (others => '0');
 	
 	
 end package;
@@ -56,8 +58,6 @@ package testbenchCommons is
     signal currenttime : time    := 0 ns;	
 	constant CLK_PERIOD : time := 10 ns;		
 	
-	-- useful for reasons
-	signal zero : std_logic_vector(31 downto 0) := (others => '0');
 	
 	--wait procedures prototypes
 	procedure waitPeriod;

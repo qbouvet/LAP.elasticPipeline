@@ -67,7 +67,7 @@ architecture vanilla of bufferedJoinN is
 begin	
 	-- generate buffers for all inputs
 	buffersGen : for i in SIZE-1 downto 0 generate
-		inputBuffer : entity work.elasticBuffer(vanilla) generic map(33)
+		inputBuffer : entity work.elasticBuffer(vanilla) generic map(32)
 					port map(	clk, reset,
 								dataIn(i), dataOut(i),
 								pValidArray(i), joinReadyArray(i),

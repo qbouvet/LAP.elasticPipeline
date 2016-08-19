@@ -103,7 +103,6 @@ end vanilla;
 library ieee;
 use ieee.std_logic_1164.all;
 use work.customTypes.all;
-use work.
 
 entity mergeHybridBuffered is port(
 	clk, reset		: in std_logic;

@@ -70,11 +70,11 @@
 00001000000000000000001010000000	-> 10
 # addi r2, r0, 20
 00010000000000000000010100000000	-> 20
-# addi r2, r2, zero					-> 20			(uses the "fastest" forwarding path)
+# addi r2, r2, zero					-> 20
 00010000100000000000000000000000
-# op1 r6, r1, r2					-> 300			(uses both the fastest (2) and slowest (1) forwarding paths)
+# op1 r6, r1, r2					-> 300
 00110000010001000000100000100000
-# op1 r6, r6, r6					-> 180'000		(writes to itself without messing up with the forwarding paths)
+# op1 r6, r6, r6					-> 180'000
 00110001100011000000100000100000
 # nop
 00000000000000000000000000000000
