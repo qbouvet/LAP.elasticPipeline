@@ -97,7 +97,7 @@ begin
 	
 	
 	--instantiates the DUT		can be : 	elasticBasic, singleFwdPath, fwdPathResolution
-	circ : entity work.circuit(fwdPathResolution) 
+	circ : entity work.circuit(elasticBasic_delayedAdrW1) 
 			port map(	reset, clk, 
 						IFDready,	-- ready
 						dataValid,	-- pValid

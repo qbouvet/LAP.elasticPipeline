@@ -142,7 +142,7 @@ begin
 						RFvalidArray);								-- validArray
 	--	(IFDnReadyArray(4 downto 2), RFreadyForWrdata) <= RFreadyArray;--debug : now useless
 	
-	OPU : entity work.OPunit(branchmerge)
+	OPU : entity work.OPunit(branchmergeHybrid)
 			port map(	clk, reset,
 						operandB, operandA, argI, oc, 
 						opResult, 
