@@ -176,7 +176,7 @@ begin
 						fork_validArray);		-- validArray	
 	
 	-- can be : forwarding, delay1
-	addi : entity work.op0(forwarding)
+	addi : entity work.op0(delay1)
 			port map (	clk, reset,
 						argA, argI, res0, 
 						fork_validArray(0),			-- pValid

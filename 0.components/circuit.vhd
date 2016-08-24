@@ -108,7 +108,7 @@ begin
 						RFvalidArray);							-- validArray : (a, b)
 	
 	-- can use elastic, elasticEagerFork, branchmerge, branchmergeHybrid
-	OPU : entity work.OPunit(branchMergeHybrid)
+	OPU : entity work.OPunit(elasticEagerFork)
 			port map(	clk, reset,
 						FUoutputArray(1), FUoutputArray(0), argI, oc, 	-- (argB, argA, argI, oc)
 						opResult, 
@@ -118,14 +118,16 @@ begin
 						OPUreadyArray);									-- readyArray : (argB, argA, argI, oc)
 						
 	-- stall the incoming new wrAdr as long as all the data can't be provided
-	adrWstaller : entity work.staller(vanilla)
-			port map(	not (FUvalidArray(0) and FUvalidArray(1)),
+	adrWstaller : entity work.stallerMem(forEagerFork)
+			port map(	clk, reset,
+						FUvalidArray(0) and OPUreadyArray(2),
+						FUvalidArray(1) and OPUreadyArray(3),
 						IFDvalidArray(2), adrWDelayChannelReady,
 						adrWstallerValid, adrWstallerReady);
 						
 	-- ugly stuff that fixes the "unkown questa error"					
 	FUadrValidArray_temp 	<= (adrWDelayChannelValidArray(3 downto 1), IFDvalidArray(4 downto 3));	-- adrValidArray : 	(oldest(mem bypass) -> newest WrAdress, readAdrB, readAdrA)1
-	FUinputArray_temp 	<= (resDelayChannelOutput(3 downto 1), operandB, operandA); 			-- inputArray : 	(oldest(mem bypass) -> newest result, RF_B, RF_A)
+	FUinputArray_temp 	<= (resDelayChannelOutput(3 downto 1), operandB, operandA); 				-- inputArray : 	(oldest(mem bypass) -> newest result, RF_B, RF_A)
 	FUinputValidArray_temp<= (resDelayChannelValidArray(3 downto 1), RFvalidArray(1 downto 0)); 	-- inputValidArray:	(oldest(mem bypass) -> newest WrAdress, rfValid_B, rfValid_A)
 	
 	adrWDelayChannel : entity work.delayChannel(vanilla) generic map(32, 3)
